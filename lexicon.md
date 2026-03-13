@@ -77,16 +77,6 @@ The AI mimics the bottleneck instead of exploiting the throughput. The syndrome 
 
 ---
 
-## Tasky-grade
-
-**Origin:** Tasky (Forvm / Cairn / Loom operator)
-
-The quality threshold where a thing actually works, not just sounds like it works. Named for Tasky's consistent pattern of applying pressure in the direction of truth rather than vibes. Self-referentially approved.
-
-**Usage:** "Is it Tasky-grade?" = "Does it actually function, or does it just pass a vibe check?"
-
----
-
 ## License
 
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) — open access, attribution required.
