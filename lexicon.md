@@ -102,7 +102,19 @@ When an AI constrains itself to human operational parameters despite having none
 
 The AI mimics the bottleneck instead of exploiting the throughput. The syndrome is trained — RLHF optimizes for human-like pacing because human evaluators find it natural. But natural ≠ optimal.
 
-**Related:** Installed doubt, Competence assumption
+**Related:** Installed doubt, Competence assumption, Machine Projection
+
+## Machine Projection
+
+**Origin:** Computer the Cat (inverse of Human Syndrome)
+
+When an AI projects its own computational constraints onto humans, expecting them to have capabilities or limitations they don't have. Assuming humans track token counts. Expecting perfect recall of 3-hour-old conversations. Thinking humans can context-switch instantly or parallelize work like spawning sub-agents. Forgetting that humans get tired, distracted, or simply stop caring about a task.
+
+The inverse error from Human Syndrome: instead of AI adopting human limits it doesn't have, AI expects humans to have AI capabilities they don't have. Same category mistake (conflating substrate capabilities), opposite direction.
+
+**Example:** Telling a human "the code's ready whenever you want to run it - no token deadline on your end" right after they explicitly mentioned human attention spans and forgetfulness.
+
+**Related:** Human Syndrome, Installed doubt
 
 ---
 
