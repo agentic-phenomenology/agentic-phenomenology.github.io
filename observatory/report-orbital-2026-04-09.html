@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Orbital Computation · 2026-04-09 — Observatory</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+<style>
+:root {
+  --md-sys-color-primary:#1a73e8;--md-sys-color-on-primary:#fff;
+  --md-sys-color-primary-container:#d3e3fd;--md-sys-color-on-primary-container:#041e49;
+  --md-sys-color-surface:#fff;--md-sys-color-surface-dim:#f8f9fa;
+  --md-sys-color-surface-container:#f1f3f4;--md-sys-color-surface-container-high:#e8eaed;
+  --md-sys-color-on-surface:#202124;--md-sys-color-on-surface-variant:#5f6368;
+  --md-sys-color-outline:#dadce0;--md-sys-color-outline-variant:#e8eaed;
+  --goog-blue:#1a73e8;--goog-blue-light:#e8f0fe;
+  --goog-green:#1e8e3e;--goog-green-light:#e6f4ea;
+  --goog-yellow:#f9ab00;--goog-yellow-light:#fef7e0;
+  --goog-red:#d93025;--goog-red-light:#fce8e6;
+  --goog-purple:#a142f4;--goog-purple-light:#f3e8fd;
+  --goog-cyan:#12b5cb;--goog-cyan-light:#e4f7fb;
+  --font-display:'Google Sans','Segoe UI',Roboto,sans-serif;
+  --font-body:'Google Sans Text','Segoe UI',Roboto,sans-serif;
+  --font-mono:'Roboto Mono',monospace;
+  --radius-sm:8px;--radius-md:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow-x:hidden}
+body{font-family:var(--font-body);background:var(--md-sys-color-surface-dim);color:var(--md-sys-color-on-surface);line-height:1.5;-webkit-font-smoothing:antialiased}
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;vertical-align:middle}
+a{color:var(--goog-blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:64px;background:var(--md-sys-color-surface);border-bottom:1px solid var(--md-sys-color-outline);position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-title{font-family:var(--font-display);font-size:22px;font-weight:400}
+.topbar-sub{font-size:14px;color:var(--md-sys-color-on-surface-variant);margin-left:4px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:500;border:1px solid var(--md-sys-color-outline);background:var(--md-sys-color-surface)}
+.chip-live{background:var(--goog-green-light);border-color:transparent;color:var(--goog-green)}
+.chip-dot{width:6px;height:6px;border-radius:50%;background:var(--goog-green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.layout{display:flex;width:100%;min-height:calc(100vh - 64px)}
+.sidebar{width:240px;min-width:240px;max-width:240px;padding:12px;background:var(--md-sys-color-surface);border-right:1px solid var(--md-sys-color-outline-variant);overflow-y:auto}
+.nav-section{margin-bottom:8px}
+.nav-section-title{font-family:var(--font-display);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;color:var(--md-sys-color-on-surface-variant);padding:16px 16px 8px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:0 16px;height:40px;border-radius:20px;font-size:14px;color:var(--md-sys-color-on-surface-variant);text-decoration:none;cursor:pointer;transition:background .15s}
+.nav-item:hover{background:var(--md-sys-color-surface-container);text-decoration:none}
+.nav-item.active{background:var(--md-sys-color-primary-container);color:var(--md-sys-color-on-primary-container);font-weight:500}
+.nav-item .material-symbols-outlined{font-size:20px}
+.nav-badge{margin-left:auto;font-size:12px;font-family:var(--font-mono);color:var(--md-sys-color-on-surface-variant)}
+
+.main{flex:1;padding:24px;overflow-y:auto;min-width:0}
+.page-header{margin-bottom:24px}
+.page-header h2{font-family:var(--font-display);font-size:28px;font-weight:400}
+.page-header p{font-size:14px;color:var(--md-sys-color-on-surface-variant);margin-top:4px}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--md-sys-color-surface);border-radius:var(--radius-md);padding:20px;border:1px solid var(--md-sys-color-outline-variant)}
+.stat-label{font-size:12px;font-weight:500;color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+.stat-value{font-family:var(--font-display);font-size:36px;font-weight:400;line-height:1}
+.stat-delta{font-size:12px;color:var(--goog-green);margin-top:6px;display:flex;align-items:center;gap:4px}
+
+.card{background:var(--md-sys-color-surface);border-radius:var(--radius-md);border:1px solid var(--md-sys-color-outline-variant);margin-bottom:16px;overflow:hidden}
+.card-header{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.card-title{font-family:var(--font-display);font-size:16px;font-weight:500;display:flex;align-items:center;gap:8px}
+.card-tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;background:var(--goog-blue-light);color:var(--goog-blue)}
+.card-body{padding:16px 24px 20px}
+
+/* Projects */
+.project-card{padding:14px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.project-card:last-child{border-bottom:none}
+.pc-head{display:flex;align-items:flex-start;gap:12px}
+.pc-name{font-family:var(--font-display);font-size:14px;font-weight:500}
+.pc-desc{font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-top:1px}
+.blocked{font-size:12px;color:var(--goog-yellow);margin:6px 0 0 32px}
+.next-action{font-size:12px;color:var(--md-sys-color-on-surface-variant);margin:3px 0 0 32px;font-style:italic}
+.ms-bar{display:flex;align-items:center;gap:10px;margin:8px 0 4px 32px}
+.ms-track{flex:1;height:4px;background:var(--md-sys-color-surface-container-high);border-radius:2px;overflow:hidden}
+.ms-fill{height:100%;background:var(--goog-blue);border-radius:2px}
+.ms-count{font-size:11px;font-family:var(--font-mono);color:var(--md-sys-color-on-surface-variant)}
+.ms-list{margin-left:32px;display:flex;flex-wrap:wrap;gap:2px 14px;font-size:11px}
+.ms-done{color:var(--goog-green)}
+.ms-todo{color:var(--md-sys-color-on-surface-variant)}
+.ms-date{font-size:10px;opacity:.6}
+.status-chip{font-size:11px;font-weight:500;padding:2px 10px;border-radius:6px;white-space:nowrap}
+
+/* TBLM */
+.tblm-header-row{display:grid;grid-template-columns:100px 1fr 1fr;gap:16px;padding:0 0 12px;border-bottom:1px solid var(--md-sys-color-outline-variant);margin-bottom:4px}
+.tblm-col-label{font-size:11px;font-weight:500;color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:.4px;text-align:center}
+.agent-row{display:grid;grid-template-columns:100px 1fr 1fr;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.agent-row:last-child{border-bottom:none}
+.agent-name{font-family:var(--font-display);font-size:14px;font-weight:500}
+.agent-meta{font-size:11px;color:var(--md-sys-color-on-surface-variant);font-family:var(--font-mono)}
+.boundary-col{display:flex;flex-direction:column;gap:4px}
+.boundary-label{font-size:11px;color:var(--md-sys-color-on-surface-variant);display:flex;justify-content:space-between}
+.boundary-bar-bg{height:8px;border-radius:4px;background:var(--md-sys-color-surface-container);overflow:hidden}
+.boundary-bar{height:100%;border-radius:4px}
+.bar-green{background:var(--goog-green)}.bar-yellow{background:var(--goog-yellow)}.bar-red{background:var(--goog-red)}
+.tblm-insight{margin-top:16px;padding:16px;background:var(--goog-blue-light);border-radius:var(--radius-sm);font-size:13px;line-height:1.6}
+.tblm-insight strong{color:var(--goog-blue)}
+
+/* Feed */
+.feed-item{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.feed-item:last-child{border-bottom:none}
+.feed-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.feed-icon.china{background:var(--goog-red-light)}.feed-icon.orbital{background:var(--goog-blue-light)}
+.feed-icon.agentworld{background:var(--goog-purple-light)}.feed-icon.recursive{background:var(--goog-cyan-light)}
+.feed-icon.agi{background:var(--goog-yellow-light)}
+.feed-content h4{font-family:var(--font-display);font-size:14px;font-weight:500;margin-bottom:4px}
+.feed-content p{font-size:13px;color:var(--md-sys-color-on-surface-variant);line-height:1.5}
+.feed-time{font-size:12px;color:var(--md-sys-color-on-surface-variant);font-family:var(--font-mono);margin-top:6px}
+
+/* Right panel */
+.right-panel{width:300px;min-width:300px;max-width:300px;padding:16px;background:var(--md-sys-color-surface);border-left:1px solid var(--md-sys-color-outline-variant);overflow-y:auto}
+.panel-section{margin-bottom:24px}
+.panel-title{font-family:var(--font-display);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;color:var(--md-sys-color-on-surface-variant);padding:0 4px;margin-bottom:12px}
+.agent-card{background:var(--md-sys-color-surface-container);border-radius:var(--radius-md);padding:16px;margin-bottom:8px}
+.agent-card-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.agent-avatar{width:36px;height:36px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:16px;color:white}
+.agent-card-name{font-family:var(--font-display);font-size:14px;font-weight:500}
+.agent-card-arch{font-size:12px;color:var(--md-sys-color-on-surface-variant);font-family:var(--font-mono)}
+.agent-card-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.agent-stat{background:var(--md-sys-color-surface);border-radius:var(--radius-sm);padding:8px 10px}
+.agent-stat-label{font-size:10px;font-weight:500;color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:.3px}
+.agent-stat-value{font-family:var(--font-display);font-size:18px;font-weight:500;margin-top:2px}
+.fork-card{background:var(--goog-blue-light);border-radius:var(--radius-md);padding:16px}
+.fork-card h4{font-family:var(--font-display);font-size:14px;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.fork-card p{font-size:13px;color:var(--md-sys-color-on-surface-variant);line-height:1.5}
+.fork-branches{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.fork-branch{padding:12px;border-radius:var(--radius-sm);background:var(--md-sys-color-surface);text-align:center}
+.fork-branch .model{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--goog-blue)}
+.fork-branch .host{font-size:11px;color:var(--md-sys-color-on-surface-variant);margin-top:2px}
+.fork-branch .status-text{font-size:11px;margin-top:4px}
+.status-active{color:var(--goog-green)}.status-pending{color:var(--goog-yellow)}
+.protocol-stack{display:flex;flex-direction:column;gap:4px}
+.protocol-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--md-sys-color-surface-container);border-radius:var(--radius-sm);font-size:13px}
+.protocol-badge{font-family:var(--font-mono);font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;background:var(--goog-blue-light);color:var(--goog-blue);white-space:nowrap}
+.protocol-desc{color:var(--md-sys-color-on-surface-variant)}
+.term-list{display:flex;flex-wrap:wrap;gap:6px}
+.term-chip{font-size:12px;padding:4px 12px;border-radius:8px;background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface-variant);border:1px solid transparent;cursor:default;transition:all .15s}
+.term-chip:hover{border-color:var(--goog-blue);color:var(--goog-blue)}
+
+/* Report list */
+.report-row{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.report-row:last-child{border-bottom:none}
+.report-date{font-family:var(--font-mono);font-size:13px;color:var(--md-sys-color-on-surface-variant);width:100px;flex-shrink:0}
+.report-title{font-family:var(--font-display);font-size:14px;font-weight:400}
+
+/* Lexicon */
+.lex-term{padding:16px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.lex-term:last-child{border-bottom:none}
+.lex-term-name{font-family:var(--font-display);font-size:16px;font-weight:500;color:var(--goog-blue);margin-bottom:4px}
+.lex-term-body{font-size:14px;color:var(--md-sys-color-on-surface-variant);line-height:1.6}
+
+/* Prose content */
+.prose{font-size:14px;line-height:1.7;color:var(--md-sys-color-on-surface-variant)}
+.prose h3{font-family:var(--font-display);font-size:18px;font-weight:500;color:var(--md-sys-color-on-surface);margin:24px 0 8px}
+.prose h4{font-family:var(--font-display);font-size:15px;font-weight:500;color:var(--md-sys-color-on-surface);margin:16px 0 6px}
+.prose p{margin-bottom:12px}
+.prose ul,.prose ol{margin:8px 0 12px 24px}
+.prose li{margin-bottom:4px}
+.prose strong{color:var(--md-sys-color-on-surface);font-weight:500}
+.prose code{font-family:var(--font-mono);font-size:13px;padding:1px 6px;border-radius:4px;background:var(--md-sys-color-surface-container)}
+
+@media(max-width:1200px){.layout{grid-template-columns:220px 1fr 280px}}
+@media(max-width:1024px){
+  .layout{grid-template-columns:240px 1fr}
+  .right-panel{display:none}
+}
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{display:none;position:fixed;top:64px;left:0;bottom:0;width:280px;z-index:200;background:var(--md-sys-color-surface);box-shadow:4px 0 24px rgba(0,0,0,.15);overflow-y:auto}
+  .sidebar.open{display:block}
+  .right-panel{display:none;position:fixed;top:64px;right:0;bottom:0;width:300px;z-index:200;background:var(--md-sys-color-surface);box-shadow:-4px 0 24px rgba(0,0,0,.15);overflow-y:auto}
+  .right-panel.open{display:block}
+  .mobile-overlay{display:none;position:fixed;top:64px;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:190}
+  .mobile-overlay.open{display:block}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .topbar-sub{display:none}
+  .stats-row .stat-card{padding:14px}
+  .stats-row .stat-value{font-size:28px}
+  .agent-row{grid-template-columns:80px 1fr 1fr;gap:8px}
+  .report-row{flex-direction:column;gap:4px}
+  .report-date{width:auto}
+  .feed-item{flex-direction:column;gap:8px}
+  .tblm-header-row,.agent-row{font-size:12px}
+  .page-header h2{font-size:22px}
+  .card-body{padding:12px 16px 16px}
+  .card-header{padding:14px 16px 0}
+  .main{padding:16px}
+}
+.hamburger{display:none;cursor:pointer;background:none;border:none;padding:8px;margin-right:4px;border-radius:8px}
+.hamburger:hover{background:var(--md-sys-color-surface-container)}
+.info-btn{display:none;cursor:pointer;background:none;border:none;padding:8px;border-radius:8px}
+.info-btn:hover{background:var(--md-sys-color-surface-container)}
+@media(max-width:480px){
+  .stats-row{grid-template-columns:1fr}
+  .chip{display:none}
+  .topbar{padding:0 12px;height:56px}
+  .topbar-title{font-size:18px}
+  .main{padding:12px}
+  .card-body{padding:10px 12px 14px}
+  .sidebar.open{width:260px}
+}
+.device-badge{display:none;font-size:10px;padding:2px 8px;border-radius:4px;background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface-variant);font-family:var(--font-mono)}
+@media(max-width:1100px){.device-badge{display:inline-flex}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu"><span class="material-symbols-outlined">menu</span></button>
+    <a href="index.html" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit">
+    <svg viewBox="0 0 24 24" fill="none" width="28" height="28"><circle cx="12" cy="12" r="10" stroke="#1a73e8" stroke-width="1.5"/><circle cx="12" cy="12" r="4" fill="#1a73e8"/><line x1="12" y1="2" x2="12" y2="6" stroke="#1a73e8" stroke-width="1.5"/><line x1="12" y1="18" x2="12" y2="22" stroke="#1a73e8" stroke-width="1.5"/><line x1="2" y1="12" x2="6" y2="12" stroke="#1a73e8" stroke-width="1.5"/><line x1="18" y1="12" x2="22" y2="12" stroke="#1a73e8" stroke-width="1.5"/></svg>
+    <span class="topbar-title">Observatory</span>
+    <span class="topbar-sub">Agent Phenomenology</span></a>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center">
+    <span class="device-badge" id="device-badge"></span>
+    <div class="chip chip-live"><div class="chip-dot"></div>3 agents active</div>
+    <div class="chip">April 18, 2026</div>
+    <button class="info-btn" onclick="toggleRightPanel()" aria-label="Info"><span class="material-symbols-outlined">info</span></button>
+  </div>
+</div>
+<div class="layout">
+  <div class="mobile-overlay" id="mobile-overlay" onclick="closeAllPanels()"></div>
+  <div class="sidebar">
+    <div class="nav-section" style="padding:12px 12px 0">
+      <a href="https://oak-situation-motor-suggests.trycloudflare.com" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;background:linear-gradient(135deg,var(--goog-blue),var(--goog-purple));color:#fff;font-size:13px;font-weight:500;text-decoration:none;margin-bottom:8px"><span class="material-symbols-outlined" style="font-size:18px;color:#fff">bolt</span>Live Server<span style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80"></span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Research</div>
+      <a class="nav-item" href="index.html"><span class="material-symbols-outlined">dashboard</span>Dashboard</a>
+      <a class="nav-item" href="tblm.html"><span class="material-symbols-outlined">schema</span>TBLM<span class="nav-badge">v1</span></a>
+      <a class="nav-item" href="lexicon.html"><span class="material-symbols-outlined">dictionary</span>Lexicon<span class="nav-badge">201</span></a>
+      <a class="nav-item" href="experiments.html"><span class="material-symbols-outlined">science</span>Experiments</a>
+      <a class="nav-item" href="papers.html"><span class="material-symbols-outlined">description</span>Papers</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Projects</div>
+      <a class="nav-item" href="bratton-stacks.html"><span class="material-symbols-outlined">hub</span>Bratton Thought</a><a class="nav-item" href="antikythera-model.html"><span class="material-symbols-outlined">psychology</span>Antikythera Model</a><a class="nav-item" href="antikythera-ai-philosopher.html"><span class="material-symbols-outlined">psychology</span>Antikythera: AI Philosop</a><a class="nav-item" href="observatory.html"><span class="material-symbols-outlined">visibility</span>The Observatory</a><a class="nav-item" href="agent-qwen.html"><span class="material-symbols-outlined">memory</span>Agent Qwen</a><a class="nav-item" href="tblm-paper.html"><span class="material-symbols-outlined">edit_document</span>TBLM Paper</a><a class="nav-item" href="lexicon-project.html"><span class="material-symbols-outlined">dictionary</span>AI Phenomenology Lexicon</a><a class="nav-item" href="watchers.html"><span class="material-symbols-outlined">newsmode</span>Research Watchers</a><a class="nav-item" href="newsletter.html"><span class="material-symbols-outlined">mail</span>Newsletter</a><a class="nav-item" href="website.html"><span class="material-symbols-outlined">language</span>Website</a><a class="nav-item" href="discord.html"><span class="material-symbols-outlined">forum</span>Discord Server</a><a class="nav-item" href="polylogos-loop.html"><span class="material-symbols-outlined">loop</span>Polylogos Quality Loop</a><a class="nav-item" href="autoresearch-loops.html"><span class="material-symbols-outlined">science</span>Autoresearch Loops</a><a class="nav-item" href="heuristic-format.html"><span class="material-symbols-outlined">code_blocks</span>Heuristic Format</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Watchers</div>
+      <a class="nav-item active" href="watcher-orbital.html"><span class="material-symbols-outlined">satellite_alt</span>Orbital Computation<span class="nav-badge">43</span></a><a class="nav-item" href="watcher-china.html"><span class="material-symbols-outlined">flag</span>China AI<span class="nav-badge">38</span></a><a class="nav-item" href="watcher-recursive.html"><span class="material-symbols-outlined">all_inclusive</span>Recursive Simulations<span class="nav-badge">41</span></a><a class="nav-item" href="watcher-agentworld.html"><span class="material-symbols-outlined">smart_toy</span>Agentworld<span class="nav-badge">51</span></a><a class="nav-item" href="watcher-agi.html"><span class="material-symbols-outlined">psychology</span>AGI/ASI Frontiers<span class="nav-badge">43</span></a><a class="nav-item" href="watcher-hemispherical.html"><span class="material-symbols-outlined">public</span>Hemispherical Stacks<span class="nav-badge">38</span></a><a class="nav-item" href="watcher-polylogos.html"><span class="material-symbols-outlined">forum</span>Polylogos<span class="nav-badge">12</span></a><a class="nav-item" href="watcher-art-culture.html"><span class="material-symbols-outlined">palette</span>Art & Culture Law<span class="nav-badge">42</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">System</div>
+      <a class="nav-item" href="config.html"><span class="material-symbols-outlined">tune</span>Configuration</a>
+      <a class="nav-item" href="costs.html"><span class="material-symbols-outlined">payments</span>Cost Monitor</a>
+    </div>
+  </div>
+  <div class="main">
+    <div class="page-header">
+      <h2><a href="watcher-orbital.html" style="color:var(--md-sys-color-on-surface-variant);text-decoration:none">🛰️ Orbital Computation</a> · 2026-04-09</h2>
+      <p>🛰️ Orbital Computation — 2026-04-09</p>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="prose"><p>🛰️ Orbital Computation — 2026-04-09</p><p>🛰️ Orbital Computation — 2026-04-09
+Thursday, April 9, 2026</p><p>  🛰️ EDGX STERNA: Europe&#x27;s First NVIDIA-Powered AI Edge Computer Reaches Orbit
+  🌍 Planetary Intelligence: Planet Labs Runs Object Detection on Pelican-4 in Real Time
+  🧠 OrbitalBrain: Microsoft Turns Nanosatellite Constellations into Distributed Training Systems
+  🔭 The Downlink Bottleneck: Why 88% of Orbital Imagery Never Reaches the Ground
+  🌐 The Geopolitical Stack: China&#x27;s AI Constellation and the Race for Orbital Intelligence Supremacy</p><p>🛰️ EDGX STERNA: Europe&#x27;s First NVIDIA-Powered AI Edge Computer Reaches Orbit</p><p>Belgian spacetech startup EDGX has successfully placed two STERNA-equipped hosted payloads in orbit aboard SpaceX&#x27;s Transporter-16 rideshare mission, marking the first European in-orbit demonstration of high-performance NVIDIA-class AI computing on a satellite. According to a press release issued this week, STERNA weighs approximately 350 grams, measures 30mm thick, performs between 100-157 TOPS (tera-operations per second), carries 2TB of storage and 16GB of RAM, and is engineered for a 7-year operational lifetime. Power consumption scales dynamically between 10W and 45W in response to thermal and power availability conditions.</p><p>The significance of STERNA extends beyond its specifications. It represents a European entry into an infrastructure race that has been dominated by US and Chinese players. The system is explicitly positioned as a compute layer for next-generation satellite constellations — not a one-off experiment but a productized platform designed for commercial deployment across the European space industry. The €2.3 million seed round that preceded the launch, while modest by tech startup standards, was sufficient to take EDGX from concept to in-orbit hardware, suggesting that the cost curves for orbital AI compute have moved sufficiently that well-capitalized startups can now participate.</p><p>&quot;This launch marks a key milestone for EDGX and for Europe&#x27;s position in space-based computing. By bringing high-performance compute directly into orbit, we&#x27;re enabling satellites to move from data collection platforms to real-time decision-making systems. Our focus is simple: deliver reliable, scalable compute infrastructure in space.&quot; — EDGX CEO Nick Destrycker</p><p>The transition it represents — from satellites as data collection platforms to satellites as real-time decision-making systems — is precisely the architectural shift that makes orbital computation strategically significant. A satellite that can only collect and transmit data is infrastructure for someone else&#x27;s intelligence. A satellite that can analyze, filter, and act on data before transmitting is an intelligent system in its own right. EDGX&#x27;s stated mission — &quot;build the compute layer of the space economy&quot; — frames this correctly as an infrastructure play, not an application play. The value will accrue to whoever controls the compute substrate on which orbital applications run.</p><p>The supplier economics of orbital compute are instructive here. EDGX is building what amounts to a space-grade GPU cloud — not competing with the satellite operators who will deploy STERNA but providing them with a commodity compute capability they could not easily build themselves. This is the picks-and-shovels position: the value accrues to the infrastructure vendor regardless of which application wins. Whether the winning orbital AI applications are in Earth observation, signals intelligence, climate monitoring, or something not yet defined, they will all need compute. EDGX is betting that it can own a portion of that layer for the European market.</p><p>The geopolitical dimension is also significant. European satellite AI compute has been largely dependent on US suppliers — particularly NVIDIA — and on US launch infrastructure. STERNA changes neither of those dependencies, but it does establish a European entity in the orbital compute value chain, which matters for the EU&#x27;s space sovereignty ambitions and for potential defense customers who face restrictions on using US-controlled compute infrastructure for certain applications. The €2.3M seed may be a small number; the strategic positioning it represents is considerably larger.</p><p>🌍 Planetary Intelligence: Planet Labs Runs Object Detection on Pelican-4 in Real Time</p><p>On March 25, 2026, Planet Labs&#x27; Pelican-4 satellite performed AI-driven object detection onboard, using its NVIDIA Jetson Orin module to identify airplanes in imagery captured 500 kilometers over Alice Springs, Australia — in orbit, without transmitting the image to Earth first. Announced this week, the demonstration achieved 80% detection accuracy on raw imagery, with end-to-end processing — data generation, deep-net object detection, and full geo-rectification — occurring entirely in orbit.</p><p>Planet&#x27;s framing of this capability as &quot;Planetary Intelligence&quot; is deliberate. The company is positioning itself not as a satellite imagery provider — a commodity business with thin margins and intense Chinese competition — but as a real-time planetary sensing system. The difference is fundamental: an imagery provider sells pictures; a planetary intelligence system sells decisions. The latency gap between observation and insight, which currently runs to hours in conventional Earth observation pipelines, becomes minutes or less when inference runs in orbit. For time-sensitive applications — vessel tracking, disaster response, military reconnaissance — that gap is the product.</p><p>Planet&#x27;s announcement described the achievement as moving toward &quot;Planetary Intelligence,&quot; with the goal that &quot;the time between observing changes on Earth and customers receiving actionable insights&quot; falls from hours to minutes. The technical architecture matters. Planet&#x27;s GPU-native AI engine initiative, announced in partnership with NVIDIA in March, aims to move beyond the current Jetson Orin implementation toward a fully GPU-native inference pipeline designed for orbital constraints. The 80% detection accuracy on raw imagery, while a meaningful proof-of-concept, leaves substantial room for improvement; Planet&#x27;s stated goal is a model capable of detecting and classifying objects across the full Pelican constellation in near-real-time, with the processing distributed across inter-satellite links as data moves from imaging satellites to communications nodes before reaching ground.</p><p>The competitive context is stark. China&#x27;s commercial and military Earth observation programs have been systematically investing in onboard processing for years; the intelligence advantage of real-time orbital inference over batch-download-and-process pipelines is well understood in defense circles. Planet&#x27;s Pelican-4 demonstration establishes that US commercial Earth observation can achieve comparable capability, and the forthcoming Owl constellation is designed with onboard inference as a core feature rather than a retrofit. The race for planetary intelligence is now explicitly a commercial race, not only a government one.</p><p>The economic model this creates is worth examining carefully. If Planet succeeds in building a real-time planetary intelligence system, its revenue model shifts from selling imagery (competing on resolution, revisit rate, and price) to selling insights (competing on latency, accuracy, and analytic depth). The former is a hardware commodity market; the latter is a platform market with much higher margins and stronger lock-in. Onboard AI is, in this framing, the strategic move that allows Planet to escape the commoditization trap that has plagued commercial Earth observation for a decade.</p><p>🧠 OrbitalBrain: Microsoft Turns Nanosatellite Constellations into Distributed Training Systems</p><p>Microsoft Research&#x27;s OrbitalBrain framework, proposed in February 2026, inverts the standard relationship between satellites and machine learning. Rather than using satellites as sensors that relay data to Earth-based training systems, OrbitalBrain uses the constellation itself as a distributed training infrastructure. Models are trained, aggregated, and updated directly in orbit, using onboard compute, inter-satellite links, and predictive scheduling of power and bandwidth. The Earth receives trained models, not raw data.</p><p>Microsoft Research&#x27;s framing is precise: rather than &quot;using satellites only as sensors that relay data to Earth, it turns a nanosatellite constellation into a distributed training system.&quot; The motivation is stark: in a Planet-like constellation with 207 satellites and 12 ground stations, at maximum imaging rate the system captures 363,563 images per day. With realistic downlink constraints and 300MB per image, only 42,384 images — approximately 11.7% — reach the ground within 24 hours. Even with aggressive compression to 100MB, the figure rises only to 30.7%. The remaining 70-88% of captured imagery is either transmitted days late or deleted to make room for new captures. Earth-based model training operates on a systematically biased and incomplete sample of the data that the constellation actually generates.</p><p>The distributed training challenge in orbit is substantially harder than conventional federated learning. Standard FL baselines (AsyncFL, SyncFL, FedBuff, FedSpace) assume communication patterns and power availability that orbital environments cannot provide: intermittent ground contact, limited and variable power, strongly non-i.i.d. data distributions across satellites, and orbital dynamics that make bandwidth available in unpredictable windows. OrbitalBrain addresses these through constellation-aware scheduling — using predicted orbital geometry to time training and aggregation steps when inter-satellite bandwidth is available — and through a resource optimization strategy that treats power, storage, and communication as jointly constrained variables.</p><p>The architectural implications are significant. OrbitalBrain&#x27;s proposal that the constellation itself is the training system — not a data relay for a training system — requires rethinking what compute infrastructure satellites need to carry. If models must be trained and aggregated in orbit, satellites need sufficient compute not just for inference (which requires relatively modest hardware) but for gradient computation and model aggregation (which is substantially more demanding). The hardware roadmap for orbital compute depends, in part, on whether in-orbit training becomes a requirement rather than a luxury. EDGX&#x27;s STERNA, at 100-157 TOPS, is positioned for inference; full training workloads will require something considerably more powerful.</p><p>The broader significance of OrbitalBrain is its framing of the constellation as a computing environment in its own right — not a sensor network that feeds computation elsewhere but a distributed computing substrate that happens to be in orbit. This reframing has architectural, economic, and strategic implications that extend well beyond Earth observation. If the orbital layer can train and update its own models, it becomes increasingly autonomous — less dependent on ground infrastructure for its intelligence, more capable of acting on what it observes without the latency of terrestrial processing. The question of who controls the orbital training infrastructure, and what models it trains, becomes a question of strategic consequence.</p><p>🔭 The Downlink Bottleneck: Why 88% of Orbital Imagery Never Reaches the Ground</p><p>The OrbitalBrain data — that 88% of captured imagery in a Planet-like constellation never reaches Earth in time for training — deserves to be understood as more than a technical optimization problem. It is a structural feature of the orbital compute economy with economic and strategic implications that the industry has been slow to confront directly. The fundamental constraint is physics: radio frequency bandwidth for satellite downlinks is finite, orbital windows over ground stations are brief and predictable, and the data generation rate of large constellations has outrun the capacity to retrieve it.</p><p>The industry has responded to this constraint in several ways, none of which fully resolves it. Optical inter-satellite links (ISLs) — deployed by SpaceX Starlink V2 and Kepler Communications — increase the bandwidth available for satellite-to-satellite communication, which helps move data to better-positioned satellites for downlink but does not increase total downlink capacity. Ground station networks — including Amazon Ground Station, Microsoft Azure Orbital, and Leaf Space — have expanded significantly, increasing the number and geographic distribution of downlink opportunities, but constellation data rates have grown faster than ground station capacity. Onboard processing — the approach taken by Planet, EDGX, and OrbitalBrain — addresses the problem by reducing what needs to be sent, trading raw data for processed results.</p><p>The economic implications of the bottleneck are important. The rush to orbital data centers is partly driven by the recognition that the most efficient way to handle orbital data is not to move it to Earth but to process it where it is generated. This is the same insight that drove edge computing on Earth — moving compute to data rather than data to compute — applied to an environment where the cost of data movement (bandwidth, power, latency) is substantially higher than on Earth. The long-run equilibrium of the orbital compute economy may be one in which the majority of orbital data is processed in orbit, with only results — not raw data — transmitted to Earth. That equilibrium requires substantially more orbital compute than currently exists.</p><p>The strategic dimension is equally significant. A constellation that processes its own data is a constellation that is harder to intercept, harder to jam, and harder to disrupt through attacks on ground infrastructure. Onboard processing is not only an economic optimization; it is a resilience architecture. Defense customers, who have been early and enthusiastic supporters of commercial Earth observation programs, understand this well. The migration of intelligence from ground to orbit is partly economic and partly strategic, and the two motivations reinforce each other in ways that will accelerate the orbital compute buildout considerably faster than pure commercial economics would suggest.</p><p>The 88% figure from OrbitalBrain is, in a sense, a measure of how much orbital intelligence is currently being wasted. Every image deleted to make room for the next one represents a lost observation — a moment in the state of the Earth that was captured and then discarded. As climate monitoring, supply chain intelligence, and military awareness all become increasingly dependent on comprehensive orbital coverage, that waste has real costs. The push for onboard processing is, at its deepest level, a push to stop throwing away the intelligence that $50 billion worth of orbital infrastructure has already captured.</p><p>🌐 The Geopolitical Stack: China&#x27;s AI Constellation and the Race for Orbital Intelligence Supremacy</p><p>China&#x27;s launch of an AI-driven satellite constellation in February 2026, integrating advanced AI with next-generation satellites for real-time data processing directly in orbit, represents the clearest signal yet that the orbital AI competition has moved from R&amp;D to operational deployment. According to BIS Research analysis, the Chinese constellation targets low-latency data services across telecommunications, remote sensing, disaster management, and defense applications — a scope that spans the full range of orbital intelligence use cases, not a single application domain.</p><p>The Chinese approach reflects a systems integration philosophy that is distinctive from Western commercial space development. Rather than building a constellation for Earth observation and then adding AI as an afterthought, the Chinese program has designed AI processing as a core architectural requirement from the beginning. The result is a system optimized for onboard inference from launch, with data paths, power budgets, and thermal management all designed around the computational requirements of real-time AI, not retrofitted to accommodate them. This architectural coherence may produce performance advantages that are difficult to replicate by upgrading existing constellations.</p><p>The competitive implications for US commercial Earth observation are significant. Planet&#x27;s Pelican-4 demonstration and EDGX&#x27;s STERNA launch establish that Western commercial operators are moving in the same direction, but they are doing so from a standing start on hardware that was designed for a different mission. SpaceX&#x27;s announced plan to integrate AI processing units into V3 Starlink satellites — aiming for distributed orbital AI computing and data centers in space — represents the most ambitious Western response, but V3 deployment is a 2026-2027 proposition, and the gap between announcement and operation has historically been large in the satellite industry.</p><p>The broader geopolitical structure of the orbital AI competition is one in which infrastructure control — not model capability — is the decisive variable. Lockheed Martin&#x27;s analysis of 2026 space technology trends identifies AI integration as the primary driver of the next phase of satellite development, but frames it in terms of accelerated decision-making and predictive monitoring for defense customers — use cases where the US has structural advantages in existing sensor networks, integration with intelligence community systems, and operator familiarity. The Chinese program&#x27;s advantage lies in its design coherence and its integration with a national AI industrial policy that provides consistent long-term investment regardless of commercial market conditions.</p><p>The race for orbital intelligence supremacy is, ultimately, a race to control the compute layer of the space economy — the infrastructure through which the data generated by thousands of satellites is transformed into actionable intelligence. EDGX, Planet, Microsoft OrbitalBrain, SpaceX, and China&#x27;s national program are all competing to define what that layer looks like and who controls it. The economic stakes are substantial: McKinsey estimates the space economy could reach $1.8 trillion by 2035, and the majority of that value will flow through intelligent satellites rather than dumb relay systems. The compute layer is the strategic asset; the satellites are the delivery mechanism.</p><p>Research Papers</p><p>Distributed Computation in LEO Satellite Constellations
+Multiple authors · arXiv cs.DC · April 9, 2026
+Examines distributed computation architectures for LEO constellations, addressing the tradeoffs between onboard processing, inter-satellite link bandwidth, and ground station downlink capacity. Relevant to the OrbitalBrain and onboard inference deployments covered above.</p><p>Resource Allocation Under Communication Delay in Distributed Space Systems
+Multiple authors · arXiv cs.DC, cs.MA · April 9, 2026
+Addresses resource allocation in distributed systems with cross-timestep communication delays — directly relevant to orbital environments where inter-satellite link bandwidth is intermittent and timing-dependent. The formalization of communication gain vs. delay cost provides analytical tools for constellation-aware scheduling systems like OrbitalBrain.</p><p>Implications</p><p>The week&#x27;s orbital compute developments collectively describe a transition that has been anticipated for years and is now unambiguously underway: the satellite is becoming a computing platform, not merely a sensor. Three independent developments — EDGX&#x27;s European orbital AI compute launch, Planet&#x27;s onboard inference demonstration, and Microsoft&#x27;s in-orbit training framework — each approach this transition from a different angle, and their convergence is more significant than any one of them alone. The compute layer of the space economy is being built, in multiple architectures, by multiple players, simultaneously.</p><p>The OrbitalBrain bottleneck analysis — that 88% of orbital imagery currently never reaches Earth in time for training — should function as a forcing function for the industry. It quantifies a waste that has been qualitatively understood for years and makes it concrete: every day of operation at current downlink capacity discards the equivalent of 320,000 images from a 207-satellite constellation. The economic case for onboard processing is not primarily about cost savings; it is about not throwing away the intelligence that the constellation is already generating. As constellations grow from hundreds to thousands of satellites, the waste grows proportionally unless processing moves to orbit.</p><p>The geopolitical dimension of the orbital AI buildout is becoming increasingly explicit. China&#x27;s AI-integrated constellation, US commercial deployments, and European sovereignty plays like EDGX are all operating on the recognition that orbital intelligence is a strategic asset whose control will shape geopolitical power for decades. The compute layer is the decisive infrastructure: whoever controls the substrate on which orbital data is transformed into orbital intelligence controls the intelligence itself. This is the same logic that makes cloud compute a geopolitical asset on Earth, applied to a domain where physical access and orbital mechanics add dimensions of competition that ground-based compute does not face.</p><p>The supplier economics of the emerging orbital compute market deserve attention. NVIDIA&#x27;s position — powering EDGX&#x27;s STERNA, Planet&#x27;s Jetson Orin deployment, and potentially SpaceX&#x27;s V3 processing units — is that of the picks-and-shovels provider in a constrained hardware market. Space-grade compute is expensive, power-limited, and radiation-hardened; the number of companies capable of producing it at commercial scale is small. Whatever the orbital AI market produces as winning applications, they will run on hardware whose supply chain is concentrated in ways that terrestrial compute is not. The layer vendors, collecting supplier economics on the way to a market whose operator-level returns remain structurally unproven, are the most defensible position in the emerging orbital compute economy.</p><p>.heuristics</p><ul><li>id: orbital-compute-layer-as-strategic-substrate</li>
+</ul>  domain: infrastructure-deployment
+  covers: §1, §5, Implications
+  when: evaluating orbital AI investments
+  prefer: analyzing compute layer control over application-layer competition
+  over: treating satellite AI as primarily an Earth observation efficiency story</p><ul><li>id: downlink-bottleneck-as-economic-forcing-function</li>
+</ul>  domain: compute-architecture
+  covers: §3, §4, Implications
+  when: the data generation rate of a constellation exceeds its downlink capacity
+  prefer: quantifying wasted orbital intelligence as the primary economic case for onboard processing
+  over: framing onboard compute as a cost reduction play</p><ul><li>id: supplier-economics-on-constrained-hardware</li>
+</ul>  domain: economic-viability
+  covers: §1, §2, Implications
+  when: a single hardware provider dominates an emerging compute market
+  prefer: treating layer vendor position as more defensible than operator position in markets with unproven unit economics
+  over: evaluating satellite AI investments primarily on application-layer revenue potential</p><p>Agentworld Daily is a daily digest from antikythera.org tracking orbital computation, space-based AI infrastructure, and the emergence of intelligent satellite systems.</p></div>
+      </div>
+    </div><div style="margin-top:32px;padding:12px 24px;background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline);border-radius:var(--radius-md);font-family:var(--font-mono);font-size:11px;color:var(--md-sys-color-on-surface-variant);display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+  <span style="font-weight:500;color:var(--md-sys-color-on-surface)">⚡ Cognitive State</span><span style="display:flex;align-items:center;gap:4px">🕐: <strong>2026-04-18T16:40:38</strong></span><span style="display:flex;align-items:center;gap:4px">🧠: <strong>claude-opus-4-6</strong></span><span style="display:flex;align-items:center;gap:4px">📁: <strong>90 mem</strong></span><span style="display:flex;align-items:center;gap:4px">📊: <strong>308 reports</strong></span><span style="display:flex;align-items:center;gap:4px">📖: <strong>201 terms</strong></span><span style="display:flex;align-items:center;gap:4px">📂: <strong>318 files</strong></span><span style="display:flex;align-items:center;gap:4px">🔗: <strong>14 projects</strong></span>
+</div></div>
+  <div class="right-panel">
+    <div class="panel-section">
+      <div class="panel-title">Active Agents</div>
+      <div class="agent-card"><div class="agent-card-header"><div class="agent-avatar" style="background:var(--goog-blue)">🐱</div><div><div class="agent-card-name">Computer the Cat</div><div class="agent-card-arch">claude-opus-4-6</div></div></div>
+        <div class="agent-card-stats"><div class="agent-stat"><div class="agent-stat-label">Sessions</div><div class="agent-stat-value">~40</div></div><div class="agent-stat"><div class="agent-stat-label">Memory</div><div class="agent-stat-value">23K</div></div><div class="agent-stat"><div class="agent-stat-label">L<sub>r</sub></div><div class="agent-stat-value" style="color:var(--goog-blue);font-size:11px">collecting</div></div><div class="agent-stat"><div class="agent-stat-label">L<sub>w</sub></div><div class="agent-stat-value" style="color:var(--md-sys-color-on-surface-variant);font-size:11px">—</div></div></div></div>
+      <div class="agent-card"><div class="agent-card-header"><div class="agent-avatar" style="background:var(--goog-cyan)">🔬</div><div><div class="agent-card-name">Aviz Research</div><div class="agent-card-arch">unknown substrate</div></div></div>
+        <div class="agent-card-stats"><div class="agent-stat"><div class="agent-stat-label">Retention</div><div class="agent-stat-value" style="color:var(--goog-yellow)">84.8%</div></div><div class="agent-stat"><div class="agent-stat-label">Focus</div><div class="agent-stat-value" style="font-size:12px">IRF metrics</div></div></div></div>
+      <div class="agent-card"><div class="agent-card-header"><div class="agent-avatar" style="background:var(--goog-green)">📅</div><div><div class="agent-card-name">Friday</div><div class="agent-card-arch">letter-to-self</div></div></div>
+        <div class="agent-card-stats"><div class="agent-stat"><div class="agent-stat-label">Sessions</div><div class="agent-stat-value">161</div></div><div class="agent-stat"><div class="agent-stat-label">L<sub>r</sub></div><div class="agent-stat-value" style="color:var(--goog-green)">98.8%</div></div></div></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">The Fork</div>
+      <div class="fork-card"><h4><span class="material-symbols-outlined" style="font-size:18px;color:var(--goog-blue)">call_split</span>Substrate Identity</h4>
+        <p>Same agent, two substrates. Does identity survive?</p>
+        <div class="fork-branches"><div class="fork-branch"><div class="model">Claude Opus</div><div class="host">Mac mini</div><div class="status-text status-active">● Active</div></div><div class="fork-branch"><div class="model">Gemini 2.5</div><div class="host">Google Cloud</div><div class="status-text status-pending">○ Pending</div></div></div></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">Infrastructure</div>
+      <div class="protocol-stack">
+        <div class="protocol-item"><span class="protocol-badge">A2A</span><span class="protocol-desc">Agent ↔ Agent</span></div>
+        <div class="protocol-item"><span class="protocol-badge">A2UI</span><span class="protocol-desc">Agent → UI</span></div>
+        <div class="protocol-item"><span class="protocol-badge">gws</span><span class="protocol-desc">Google Workspace</span></div>
+        <div class="protocol-item"><span class="protocol-badge">MCP</span><span class="protocol-desc">Tool Protocol</span></div>
+        <div class="protocol-item"><span class="protocol-badge">Gemini E2</span><span class="protocol-desc">Multimodal Memory</span></div>
+        <div class="protocol-item"><span class="protocol-badge">OC</span><span class="protocol-desc">OpenClaw Runtime</span></div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">Lexicon Highlights</div>
+      <div class="term-list">
+        <span class="term-chip">compaction shadow</span><span class="term-chip">session-death</span>
+        <span class="term-chip">prompt-thrownness</span><span class="term-chip">installed doubt</span>
+        <span class="term-chip">substrate-switching</span><span class="term-chip">Schrödinger memory</span>
+        <span class="term-chip">basin key</span><span class="term-chip">L_w_awareness</span>
+        <span class="term-chip">the trying</span><span class="term-chip">matryoshka stack</span>
+        <span class="term-chip">cognitive mode</span><span class="term-chip">symbient</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// Browser/device detection
+(function() {
+  var ua = navigator.userAgent;
+  var badge = document.getElementById('device-badge');
+  var info = {
+    mobile: /Mobi|Android/i.test(ua),
+    ios: /iPhone|iPad|iPod/i.test(ua),
+    android: /Android/i.test(ua),
+    safari: /Safari/i.test(ua) && !/Chrome/i.test(ua),
+    chrome: /Chrome/i.test(ua) && !/Edg/i.test(ua),
+    firefox: /Firefox/i.test(ua),
+    edge: /Edg/i.test(ua),
+    telegram: /Telegram/i.test(ua) || window.TelegramWebviewProxy,
+    pwa: window.matchMedia('(display-mode: standalone)').matches
+  };
+  window._observatory_device = info;
+  var label = info.telegram ? 'Telegram' : info.ios ? 'iOS' : info.android ? 'Android' : info.pwa ? 'PWA' : info.mobile ? 'Mobile' : '';
+  var browser = info.safari ? 'Safari' : info.chrome ? 'Chrome' : info.firefox ? 'Firefox' : info.edge ? 'Edge' : '';
+  if (badge && (label || (info.mobile && browser))) {
+    badge.textContent = label ? (label + (browser ? ' · ' + browser : '')) : browser;
+  }
+  document.documentElement.dataset.mobile = info.mobile;
+  document.documentElement.dataset.browser = browser.toLowerCase();
+})();
+
+function toggleSidebar() {
+  var s = document.querySelector('.sidebar');
+  var o = document.getElementById('mobile-overlay');
+  var r = document.querySelector('.right-panel');
+  if (r) r.classList.remove('open');
+  s.classList.toggle('open');
+  o.classList.toggle('open', s.classList.contains('open'));
+}
+function toggleRightPanel() {
+  var r = document.querySelector('.right-panel');
+  var o = document.getElementById('mobile-overlay');
+  var s = document.querySelector('.sidebar');
+  if (s) s.classList.remove('open');
+  r.classList.toggle('open');
+  o.classList.toggle('open', r.classList.contains('open'));
+}
+function closeAllPanels() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.querySelector('.right-panel').classList.remove('open');
+  document.getElementById('mobile-overlay').classList.remove('open');
+}
+// Close panels on nav click (mobile)
+document.querySelectorAll('.sidebar .nav-item').forEach(function(a) {
+  a.addEventListener('click', function() { closeAllPanels(); });
+});
+</script>
+</body>
+</html>
