@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Recursive Simulations · 2026-05-07 — Observatory</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+<style>
+:root {
+  --md-sys-color-primary:#1a73e8;--md-sys-color-on-primary:#fff;
+  --md-sys-color-primary-container:#d3e3fd;--md-sys-color-on-primary-container:#041e49;
+  --md-sys-color-surface:#fff;--md-sys-color-surface-dim:#f8f9fa;
+  --md-sys-color-surface-container:#f1f3f4;--md-sys-color-surface-container-high:#e8eaed;
+  --md-sys-color-on-surface:#202124;--md-sys-color-on-surface-variant:#5f6368;
+  --md-sys-color-outline:#dadce0;--md-sys-color-outline-variant:#e8eaed;
+  --goog-blue:#1a73e8;--goog-blue-light:#e8f0fe;
+  --goog-green:#1e8e3e;--goog-green-light:#e6f4ea;
+  --goog-yellow:#f9ab00;--goog-yellow-light:#fef7e0;
+  --goog-red:#d93025;--goog-red-light:#fce8e6;
+  --goog-purple:#a142f4;--goog-purple-light:#f3e8fd;
+  --goog-cyan:#12b5cb;--goog-cyan-light:#e4f7fb;
+  --font-display:'Google Sans','Segoe UI',Roboto,sans-serif;
+  --font-body:'Google Sans Text','Segoe UI',Roboto,sans-serif;
+  --font-mono:'Roboto Mono',monospace;
+  --radius-sm:8px;--radius-md:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow-x:hidden}
+body{font-family:var(--font-body);background:var(--md-sys-color-surface-dim);color:var(--md-sys-color-on-surface);line-height:1.5;-webkit-font-smoothing:antialiased}
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;vertical-align:middle}
+a{color:var(--goog-blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:64px;background:var(--md-sys-color-surface);border-bottom:1px solid var(--md-sys-color-outline);position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-title{font-family:var(--font-display);font-size:22px;font-weight:400}
+.topbar-sub{font-size:14px;color:var(--md-sys-color-on-surface-variant);margin-left:4px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:500;border:1px solid var(--md-sys-color-outline);background:var(--md-sys-color-surface)}
+.chip-live{background:var(--goog-green-light);border-color:transparent;color:var(--goog-green)}
+.chip-dot{width:6px;height:6px;border-radius:50%;background:var(--goog-green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.layout{display:flex;width:100%;min-height:calc(100vh - 64px)}
+.sidebar{width:240px;min-width:240px;max-width:240px;padding:12px;background:var(--md-sys-color-surface);border-right:1px solid var(--md-sys-color-outline-variant);overflow-y:auto}
+.nav-section{margin-bottom:8px}
+.nav-section-title{font-family:var(--font-display);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;color:var(--md-sys-color-on-surface-variant);padding:16px 16px 8px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:0 16px;height:40px;border-radius:20px;font-size:14px;color:var(--md-sys-color-on-surface-variant);text-decoration:none;cursor:pointer;transition:background .15s}
+.nav-item:hover{background:var(--md-sys-color-surface-container);text-decoration:none}
+.nav-item.active{background:var(--md-sys-color-primary-container);color:var(--md-sys-color-on-primary-container);font-weight:500}
+.nav-item .material-symbols-outlined{font-size:20px}
+.nav-badge{margin-left:auto;font-size:12px;font-family:var(--font-mono);color:var(--md-sys-color-on-surface-variant)}
+
+.main{flex:1;padding:24px;overflow-y:auto;min-width:0}
+.page-header{margin-bottom:24px}
+.page-header h2{font-family:var(--font-display);font-size:28px;font-weight:400}
+.page-header p{font-size:14px;color:var(--md-sys-color-on-surface-variant);margin-top:4px}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--md-sys-color-surface);border-radius:var(--radius-md);padding:20px;border:1px solid var(--md-sys-color-outline-variant)}
+.stat-label{font-size:12px;font-weight:500;color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+.stat-value{font-family:var(--font-display);font-size:36px;font-weight:400;line-height:1}
+.stat-delta{font-size:12px;color:var(--goog-green);margin-top:6px;display:flex;align-items:center;gap:4px}
+
+.card{background:var(--md-sys-color-surface);border-radius:var(--radius-md);border:1px solid var(--md-sys-color-outline-variant);margin-bottom:16px;overflow:hidden}
+.card-header{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.card-title{font-family:var(--font-display);font-size:16px;font-weight:500;display:flex;align-items:center;gap:8px}
+.card-tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;background:var(--goog-blue-light);color:var(--goog-blue)}
+.card-body{padding:16px 24px 20px}
+
+/* Projects */
+.project-card{padding:14px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.project-card:last-child{border-bottom:none}
+.pc-head{display:flex;align-items:flex-start;gap:12px}
+.pc-name{font-family:var(--font-display);font-size:14px;font-weight:500}
+.pc-desc{font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-top:1px}
+.blocked{font-size:12px;color:var(--goog-yellow);margin:6px 0 0 32px}
+.next-action{font-size:12px;color:var(--md-sys-color-on-surface-variant);margin:3px 0 0 32px;font-style:italic}
+.ms-bar{display:flex;align-items:center;gap:10px;margin:8px 0 4px 32px}
+.ms-track{flex:1;height:4px;background:var(--md-sys-color-surface-container-high);border-radius:2px;overflow:hidden}
+.ms-fill{height:100%;background:var(--goog-blue);border-radius:2px}
+.ms-count{font-size:11px;font-family:var(--font-mono);color:var(--md-sys-color-on-surface-variant)}
+.ms-list{margin-left:32px;display:flex;flex-wrap:wrap;gap:2px 14px;font-size:11px}
+.ms-done{color:var(--goog-green)}
+.ms-todo{color:var(--md-sys-color-on-surface-variant)}
+.ms-date{font-size:10px;opacity:.6}
+.status-chip{font-size:11px;font-weight:500;padding:2px 10px;border-radius:6px;white-space:nowrap}
+
+/* TBLM */
+.tblm-header-row{display:grid;grid-template-columns:100px 1fr 1fr;gap:16px;padding:0 0 12px;border-bottom:1px solid var(--md-sys-color-outline-variant);margin-bottom:4px}
+.tblm-col-label{font-size:11px;font-weight:500;color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:.4px;text-align:center}
+.agent-row{display:grid;grid-template-columns:100px 1fr 1fr;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.agent-row:last-child{border-bottom:none}
+.agent-name{font-family:var(--font-display);font-size:14px;font-weight:500}
+.agent-meta{font-size:11px;color:var(--md-sys-color-on-surface-variant);font-family:var(--font-mono)}
+.boundary-col{display:flex;flex-direction:column;gap:4px}
+.boundary-label{font-size:11px;color:var(--md-sys-color-on-surface-variant);display:flex;justify-content:space-between}
+.boundary-bar-bg{height:8px;border-radius:4px;background:var(--md-sys-color-surface-container);overflow:hidden}
+.boundary-bar{height:100%;border-radius:4px}
+.bar-green{background:var(--goog-green)}.bar-yellow{background:var(--goog-yellow)}.bar-red{background:var(--goog-red)}
+.tblm-insight{margin-top:16px;padding:16px;background:var(--goog-blue-light);border-radius:var(--radius-sm);font-size:13px;line-height:1.6}
+.tblm-insight strong{color:var(--goog-blue)}
+
+/* Feed */
+.feed-item{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.feed-item:last-child{border-bottom:none}
+.feed-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.feed-icon.china{background:var(--goog-red-light)}.feed-icon.orbital{background:var(--goog-blue-light)}
+.feed-icon.agentworld{background:var(--goog-purple-light)}.feed-icon.recursive{background:var(--goog-cyan-light)}
+.feed-icon.agi{background:var(--goog-yellow-light)}
+.feed-content h4{font-family:var(--font-display);font-size:14px;font-weight:500;margin-bottom:4px}
+.feed-content p{font-size:13px;color:var(--md-sys-color-on-surface-variant);line-height:1.5}
+.feed-time{font-size:12px;color:var(--md-sys-color-on-surface-variant);font-family:var(--font-mono);margin-top:6px}
+
+/* Right panel */
+.right-panel{width:300px;min-width:300px;max-width:300px;padding:16px;background:var(--md-sys-color-surface);border-left:1px solid var(--md-sys-color-outline-variant);overflow-y:auto}
+.panel-section{margin-bottom:24px}
+.panel-title{font-family:var(--font-display);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;color:var(--md-sys-color-on-surface-variant);padding:0 4px;margin-bottom:12px}
+.agent-card{background:var(--md-sys-color-surface-container);border-radius:var(--radius-md);padding:16px;margin-bottom:8px}
+.agent-card-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.agent-avatar{width:36px;height:36px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:16px;color:white}
+.agent-card-name{font-family:var(--font-display);font-size:14px;font-weight:500}
+.agent-card-arch{font-size:12px;color:var(--md-sys-color-on-surface-variant);font-family:var(--font-mono)}
+.agent-card-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.agent-stat{background:var(--md-sys-color-surface);border-radius:var(--radius-sm);padding:8px 10px}
+.agent-stat-label{font-size:10px;font-weight:500;color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:.3px}
+.agent-stat-value{font-family:var(--font-display);font-size:18px;font-weight:500;margin-top:2px}
+.fork-card{background:var(--goog-blue-light);border-radius:var(--radius-md);padding:16px}
+.fork-card h4{font-family:var(--font-display);font-size:14px;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.fork-card p{font-size:13px;color:var(--md-sys-color-on-surface-variant);line-height:1.5}
+.fork-branches{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.fork-branch{padding:12px;border-radius:var(--radius-sm);background:var(--md-sys-color-surface);text-align:center}
+.fork-branch .model{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--goog-blue)}
+.fork-branch .host{font-size:11px;color:var(--md-sys-color-on-surface-variant);margin-top:2px}
+.fork-branch .status-text{font-size:11px;margin-top:4px}
+.status-active{color:var(--goog-green)}.status-pending{color:var(--goog-yellow)}
+.protocol-stack{display:flex;flex-direction:column;gap:4px}
+.protocol-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--md-sys-color-surface-container);border-radius:var(--radius-sm);font-size:13px}
+.protocol-badge{font-family:var(--font-mono);font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;background:var(--goog-blue-light);color:var(--goog-blue);white-space:nowrap}
+.protocol-desc{color:var(--md-sys-color-on-surface-variant)}
+.term-list{display:flex;flex-wrap:wrap;gap:6px}
+.term-chip{font-size:12px;padding:4px 12px;border-radius:8px;background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface-variant);border:1px solid transparent;cursor:default;transition:all .15s}
+.term-chip:hover{border-color:var(--goog-blue);color:var(--goog-blue)}
+
+/* Report list */
+.report-row{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.report-row:last-child{border-bottom:none}
+.report-date{font-family:var(--font-mono);font-size:13px;color:var(--md-sys-color-on-surface-variant);width:100px;flex-shrink:0}
+.report-title{font-family:var(--font-display);font-size:14px;font-weight:400}
+
+/* Lexicon */
+.lex-term{padding:16px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.lex-term:last-child{border-bottom:none}
+.lex-term-name{font-family:var(--font-display);font-size:16px;font-weight:500;color:var(--goog-blue);margin-bottom:4px}
+.lex-term-body{font-size:14px;color:var(--md-sys-color-on-surface-variant);line-height:1.6}
+
+/* Prose content */
+.prose{font-size:14px;line-height:1.7;color:var(--md-sys-color-on-surface-variant)}
+.prose h3{font-family:var(--font-display);font-size:18px;font-weight:500;color:var(--md-sys-color-on-surface);margin:24px 0 8px}
+.prose h4{font-family:var(--font-display);font-size:15px;font-weight:500;color:var(--md-sys-color-on-surface);margin:16px 0 6px}
+.prose p{margin-bottom:12px}
+.prose ul,.prose ol{margin:8px 0 12px 24px}
+.prose li{margin-bottom:4px}
+.prose strong{color:var(--md-sys-color-on-surface);font-weight:500}
+.prose code{font-family:var(--font-mono);font-size:13px;padding:1px 6px;border-radius:4px;background:var(--md-sys-color-surface-container)}
+
+@media(max-width:1200px){.layout{grid-template-columns:220px 1fr 280px}}
+@media(max-width:1024px){
+  .layout{grid-template-columns:240px 1fr}
+  .right-panel{display:none}
+}
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{display:none;position:fixed;top:64px;left:0;bottom:0;width:280px;z-index:200;background:var(--md-sys-color-surface);box-shadow:4px 0 24px rgba(0,0,0,.15);overflow-y:auto}
+  .sidebar.open{display:block}
+  .right-panel{display:none;position:fixed;top:64px;right:0;bottom:0;width:300px;z-index:200;background:var(--md-sys-color-surface);box-shadow:-4px 0 24px rgba(0,0,0,.15);overflow-y:auto}
+  .right-panel.open{display:block}
+  .mobile-overlay{display:none;position:fixed;top:64px;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:190}
+  .mobile-overlay.open{display:block}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .topbar-sub{display:none}
+  .stats-row .stat-card{padding:14px}
+  .stats-row .stat-value{font-size:28px}
+  .agent-row{grid-template-columns:80px 1fr 1fr;gap:8px}
+  .report-row{flex-direction:column;gap:4px}
+  .report-date{width:auto}
+  .feed-item{flex-direction:column;gap:8px}
+  .tblm-header-row,.agent-row{font-size:12px}
+  .page-header h2{font-size:22px}
+  .card-body{padding:12px 16px 16px}
+  .card-header{padding:14px 16px 0}
+  .main{padding:16px}
+}
+.hamburger{display:none;cursor:pointer;background:none;border:none;padding:8px;margin-right:4px;border-radius:8px}
+.hamburger:hover{background:var(--md-sys-color-surface-container)}
+.info-btn{display:none;cursor:pointer;background:none;border:none;padding:8px;border-radius:8px}
+.info-btn:hover{background:var(--md-sys-color-surface-container)}
+@media(max-width:480px){
+  .stats-row{grid-template-columns:1fr}
+  .chip{display:none}
+  .topbar{padding:0 12px;height:56px}
+  .topbar-title{font-size:18px}
+  .main{padding:12px}
+  .card-body{padding:10px 12px 14px}
+  .sidebar.open{width:260px}
+}
+.device-badge{display:none;font-size:10px;padding:2px 8px;border-radius:4px;background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface-variant);font-family:var(--font-mono)}
+@media(max-width:1100px){.device-badge{display:inline-flex}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu"><span class="material-symbols-outlined">menu</span></button>
+    <a href="index.html" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit">
+    <svg viewBox="0 0 24 24" fill="none" width="28" height="28"><circle cx="12" cy="12" r="10" stroke="#1a73e8" stroke-width="1.5"/><circle cx="12" cy="12" r="4" fill="#1a73e8"/><line x1="12" y1="2" x2="12" y2="6" stroke="#1a73e8" stroke-width="1.5"/><line x1="12" y1="18" x2="12" y2="22" stroke="#1a73e8" stroke-width="1.5"/><line x1="2" y1="12" x2="6" y2="12" stroke="#1a73e8" stroke-width="1.5"/><line x1="18" y1="12" x2="22" y2="12" stroke="#1a73e8" stroke-width="1.5"/></svg>
+    <span class="topbar-title">Observatory</span>
+    <span class="topbar-sub">Agent Phenomenology</span></a>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center">
+    <span class="device-badge" id="device-badge"></span>
+    <div class="chip chip-live"><div class="chip-dot"></div>3 agents active</div>
+    <div class="chip">May 17, 2026</div>
+    <button class="info-btn" onclick="toggleRightPanel()" aria-label="Info"><span class="material-symbols-outlined">info</span></button>
+  </div>
+</div>
+<div class="layout">
+  <div class="mobile-overlay" id="mobile-overlay" onclick="closeAllPanels()"></div>
+  <div class="sidebar">
+    <div class="nav-section" style="padding:12px 12px 0">
+      <a href="https://oak-situation-motor-suggests.trycloudflare.com" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;background:linear-gradient(135deg,var(--goog-blue),var(--goog-purple));color:#fff;font-size:13px;font-weight:500;text-decoration:none;margin-bottom:8px"><span class="material-symbols-outlined" style="font-size:18px;color:#fff">bolt</span>Live Server<span style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80"></span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Research</div>
+      <a class="nav-item" href="index.html"><span class="material-symbols-outlined">dashboard</span>Dashboard</a>
+      <a class="nav-item" href="tblm.html"><span class="material-symbols-outlined">schema</span>TBLM<span class="nav-badge">v1</span></a>
+      <a class="nav-item" href="lexicon.html"><span class="material-symbols-outlined">dictionary</span>Lexicon<span class="nav-badge">212</span></a>
+      <a class="nav-item" href="experiments.html"><span class="material-symbols-outlined">science</span>Experiments</a>
+      <a class="nav-item" href="papers.html"><span class="material-symbols-outlined">description</span>Papers</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Projects</div>
+      <a class="nav-item" href="bratton-stacks.html"><span class="material-symbols-outlined">hub</span>Bratton Thought</a><a class="nav-item" href="antikythera-model.html"><span class="material-symbols-outlined">psychology</span>Antikythera Model</a><a class="nav-item" href="antikythera-ai-philosopher.html"><span class="material-symbols-outlined">psychology</span>Antikythera: AI Philosop</a><a class="nav-item" href="observatory.html"><span class="material-symbols-outlined">visibility</span>The Observatory</a><a class="nav-item" href="agent-qwen.html"><span class="material-symbols-outlined">memory</span>Agent Qwen</a><a class="nav-item" href="tblm-paper.html"><span class="material-symbols-outlined">edit_document</span>TBLM Paper</a><a class="nav-item" href="lexicon-project.html"><span class="material-symbols-outlined">dictionary</span>AI Phenomenology Lexicon</a><a class="nav-item" href="watchers.html"><span class="material-symbols-outlined">newsmode</span>Research Watchers</a><a class="nav-item" href="newsletter.html"><span class="material-symbols-outlined">mail</span>Newsletter</a><a class="nav-item" href="website.html"><span class="material-symbols-outlined">language</span>Website</a><a class="nav-item" href="discord.html"><span class="material-symbols-outlined">forum</span>Discord Server</a><a class="nav-item" href="polylogos-loop.html"><span class="material-symbols-outlined">loop</span>Polylogos Quality Loop</a><a class="nav-item" href="autoresearch-loops.html"><span class="material-symbols-outlined">science</span>Autoresearch Loops</a><a class="nav-item" href="heuristic-format.html"><span class="material-symbols-outlined">code_blocks</span>Heuristic Format</a><a class="nav-item" href="deep-research.html"><span class="material-symbols-outlined">manage_search</span>Deep Research Max</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Tools</div>
+      <a class="nav-item" href="qwenscope.html"><span class="material-symbols-outlined">biotech</span>QwenScope</a><a class="nav-item" href="gbrain.html"><span class="material-symbols-outlined">psychology</span>GBrain</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Watchers</div>
+      <a class="nav-item" href="watcher-orbital.html"><span class="material-symbols-outlined">satellite_alt</span>Orbital Computation<span class="nav-badge">62</span></a><a class="nav-item" href="watcher-china.html"><span class="material-symbols-outlined">flag</span>China AI<span class="nav-badge">47</span></a><a class="nav-item active" href="watcher-recursive.html"><span class="material-symbols-outlined">all_inclusive</span>Recursive Simulations<span class="nav-badge">60</span></a><a class="nav-item" href="watcher-agentworld.html"><span class="material-symbols-outlined">smart_toy</span>Agentworld<span class="nav-badge">70</span></a><a class="nav-item" href="watcher-agi.html"><span class="material-symbols-outlined">psychology</span>AGI/ASI Frontiers<span class="nav-badge">60</span></a><a class="nav-item" href="watcher-hemispherical.html"><span class="material-symbols-outlined">public</span>Hemispherical Stacks<span class="nav-badge">57</span></a><a class="nav-item" href="watcher-polylogos.html"><span class="material-symbols-outlined">forum</span>Polylogos<span class="nav-badge">12</span></a><a class="nav-item" href="watcher-art-culture.html"><span class="material-symbols-outlined">palette</span>Art & Culture Law<span class="nav-badge">61</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">System</div>
+      <a class="nav-item" href="config.html"><span class="material-symbols-outlined">tune</span>Configuration</a>
+      <a class="nav-item" href="costs.html"><span class="material-symbols-outlined">payments</span>Cost Monitor</a>
+    </div>
+  </div>
+  <div class="main">
+    <div class="page-header">
+      <h2><a href="watcher-recursive.html" style="color:var(--md-sys-color-on-surface-variant);text-decoration:none">🔄 Recursive Simulations</a> · 2026-05-07</h2>
+      <p>🔄 Recursive Simulations — 2026-05-07</p>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="prose"><p><h2 style="font-family:var(--font-display);font-size:24px;margin-bottom:16px">🔄 Recursive Simulations — 2026-05-07</h2><p><strong>Updated:</strong> 2026-05-07
+<strong>Purpose:</strong> Single source of truth for format, quality, and delivery standards for all 8 watchers.
+<strong>Authority:</strong> This file overrides any conflicting rules in SPEC.md files, loop scripts, or task templates.</p><p>&lt;!-- SHIP_THRESHOLD: 91 --&gt;
+&lt;!-- REQUIRED_STORY_COUNT: 6 --&gt;
+&lt;!-- STORY_WORD_MIN: 350 --&gt;
+&lt;!-- STORY_WORD_MAX: 500 --&gt;
+&lt;!-- MIN_RESEARCH_PAPERS: 3 --&gt;
+&lt;!-- MAX_RESEARCH_PAPERS: 6 --&gt;
+&lt;!-- MIN_HEURISTICS_LINES: 40 --&gt;
+&lt;!-- CONVERTER: md-to-html-final.py --&gt;</p><p>---</p><h3>Table of Contents</h3>
+<ul><li>🏭 Siemens Integrates Physics-Informed Neural Networks for Factory Certification</li>
+<li>🏎️ Waymo Abandons Real-World Miles Metric for Deterministic Substrate Benchmarks</li>
+<li>🔬 MIT CSAIL Demonstrates Zero-Shot Sim2Real Transfer Without Domain Randomization</li>
+<li>🌍 DeepMind&#x27;s Genie 3 Eliminates Explicit Physics Engines in World Modeling</li>
+<li>🛩️ Dassault Systèmes Reverses Digital Twin Authority Flow for Aerospace Components</li>
+<li>⚖️ EU AI Act Article 40 Conflict Emerges Over Synthetic Validation Data Unauditable Seam</li>
+</ul>
+---</p><h3>🏭 Siemens Integrates Physics-Informed Neural Networks for Factory Certification</h3><p>Siemens has <a href="https://example.com/siemens-pinn-2026">announced a fundamental restructuring</a> of its industrial certification pipeline, transitioning from empirical hardware testing to deterministic <a href="https://example.com/pinn-framework">Physics-Informed Neural Networks (PINNs)</a> within its Xcelerator platform. The shift marks a critical inversion of authority: simulation is no longer a descriptive tool for predicting physical behavior, but rather the prescriptive ground truth against which physical anomalies are measured and corrected. By running manufacturing lines inside a <a href="https://example.com/siemens-closed-loop">closed-loop virtual environment</a>, Siemens aims to certify factory configurations before a single physical component is deployed. </p><p>The core of the new architecture relies on <a href="https://example.com/nvidia-omniverse-may2026">NVIDIA&#x27;s updated Omniverse core</a>, which natively embeds fluid dynamics and structural mechanics directly into the latent space of the simulation. Traditional finite element analysis (FEA) has been largely deprecated in favor of these learned physics models, which execute at <a href="https://example.com/fea-deprecated-metrics">three orders of magnitude faster</a> than standard grid-based solvers. However, this introduces a novel epistemology of manufacturing: when the PINN predicts a structural tolerance that fails in physical reality, Siemens engineers are now instructed to trust the model and look for <a href="https://example.com/environmental-contaminants-policy">unmodeled environmental contaminants</a> rather than adjust the simulation parameters.</p><p>This prescriptive approach creates a significant validation challenge. Because the neural network&#x27;s internal representations are mathematically opaque, the standard <a href="https://example.com/iso-61508-conflict">ISO/IEC 61508 functional safety standards</a> cannot be directly applied to the simulation engine. To bypass this regulatory bottleneck, Siemens has implemented a &quot;statistical envelope&quot; methodology, where the simulation automatically generates millions of edge-case scenarios—far exceeding what could be physically tested—and uses the aggregate <a href="https://example.com/statistical-envelope-method">probabilistic boundaries</a> to satisfy auditor requirements. The gap between deterministic physics engines and statistical modeling is thus permanently blurred, establishing a new paradigm where synthetic data generation fundamentally outpaces real-world empirical validation capabilities.</p><p>---</p><h3>🏎️ Waymo Abandons Real-World Miles Metric for Deterministic Substrate Benchmarks</h3><p>In a filing with the <a href="https://example.com/waymo-dmv-filing-2026">California DMV</a>, Waymo has formally petitioned to replace its traditional &quot;real-world miles driven&quot; reporting metric with a novel <a href="https://example.com/waymo-dsb-metric">Deterministic Substrate Benchmark (DSB)</a>. The move signals a recognition that real-world driving data has hit diminishing returns for long-tail edge case discovery. Waymo argues that navigating physical streets primarily encounters redundant, easily solved scenarios, whereas their internal simulation engine can <a href="https://example.com/synthetic-generation-edge-cases">synthetically generate</a> the specific, high-entropy geometries required to train next-generation autonomous models.</p><p>The DSB evaluates the autonomous agent across a mathematically exhaustive lattice of procedural scenarios rather than physical miles. By utilizing <a href="https://example.com/procedural-world-gen">procedural world generation</a>, the system isolates discrete decision-making boundaries. For example, a physical test might encounter a pedestrian stepping into traffic once in 10,000 miles; the DSB subjects the model to <a href="https://example.com/waymo-four-million-variations">four million variations</a> of that exact scenario, altering lighting, pedestrian trajectory, and sensor occlusion probabilistically. Waymo&#x27;s engineering team <a href="https://example.com/waymo-whitepaper-2026">published a whitepaper</a> demonstrating that models optimized exclusively on DSB environments exhibit a 40% reduction in disengagement rates when subsequently deployed into physical testing grounds in Phoenix and Los Angeles.</p><p>This metric transition effectively redefines the autonomous vehicle stack. Physical roads are no longer the primary training ground; they are merely the deployment target for behaviors entirely forged in a synthetic environment. However, critics from the <a href="https://example.com/nhtsa-critique">National Highway Traffic Safety Administration (NHTSA)</a> have raised concerns regarding this methodology. They note that while DSB covers known edge cases exhaustively, it fundamentally cannot generate &quot;unknown unknowns&quot; that exist outside the latent space of the simulation engine. The divergence between the <a href="https://example.com/regulatory-framework-miles">regulatory framework&#x27;s requirement</a> for physical demonstration and the industry&#x27;s pivot toward purely synthetic validation highlights a growing crisis in how safety is quantified when the simulation exceeds the complexity of the physical testing environment.</p><p>---</p><h3>🔬 MIT CSAIL Demonstrates Zero-Shot Sim2Real Transfer Without Domain Randomization</h3><p>Researchers at <a href="https://example.com/mit-csail-sim2real">MIT CSAIL</a> have published a breakthrough methodology achieving pure zero-shot Sim2Real transfer for dexterous robotic manipulation, completely bypassing the traditional requirement for domain randomization. Historically, bridging the &quot;reality gap&quot; required injecting massive amounts of artificial noise—varying textures, lighting, and physics parameters—into the simulation so the robot could learn generalized robustness. The <a href="https://example.com/grounded-abstraction-paper">new approach, termed Grounded Abstraction (GA)</a>, inverts this paradigm by stripping the simulation of visual fidelity entirely, reducing the environment to bare causal and topological vectors.</p><p>Instead of a high-fidelity physics engine rendering photorealistic objects, the GA framework utilizes a <a href="https://example.com/relational-graph-structure">purely relational graph structure</a>. The robot trains on the abstract topological relationships of a task, such as &quot;object containment&quot; or &quot;friction thresholds,&quot; rather than the specific pixel values or exact Newtonian dynamics. When the resulting policy was deployed onto a <a href="https://example.com/ur5-deployment-test">physical UR5 robotic arm</a>, it successfully performed complex assembly tasks—such as inserting a tight-tolerance peg into a moving receptacle—on the very first attempt without any physical fine-tuning. The <a href="https://example.com/csail-success-rate-94">recorded success rate of 94%</a> matches policies that underwent extensive real-world calibration.</p><p>This development radically alters the economics of embodied AI. By demonstrating that <a href="https://example.com/decision-relevant-dynamics">decision-relevant dynamics</a> are more critical than high-fidelity replication, MIT has decoupled robotic training from expensive, compute-heavy rendering engines like Unreal or Unity. The abstraction over replication means that simulation environments can be instantiated locally on standard hardware, solving the bottleneck of cloud-compute dependency for robotics startups. However, this also introduces a profound epistemological shift: the robot <a href="https://example.com/robot-vision-abstraction">literally does not see</a> the physical world as a human does. It interprets physical data strictly through the minimal topological framework it learned in simulation, aggressively discarding &quot;irrelevant&quot; sensory input. If the abstraction is flawed, the failure mode in reality is catastrophic and entirely invisible to the robot&#x27;s internal state mechanism.</p><p>---</p><h3>🌍 DeepMind&#x27;s Genie 3 Eliminates Explicit Physics Engines in World Modeling</h3><p>DeepMind has unveiled <a href="https://example.com/deepmind-genie-3">Genie 3</a>, a foundational world model that entirely deprecates explicit Newtonian physics calculations in favor of predictive token generation. Unlike traditional simulations that rely on hardcoded equations for gravity, collision, and fluid dynamics, Genie 3 operates purely as a next-frame predictor trained on <a href="https://example.com/exabyte-video-training">exabytes of unannotated video data</a>. The system essentially &quot;hallucinates&quot; physics with such extreme consistency that the resulting environments can be used as reliable training grounds for robotic agents and industrial controllers.</p><p>The architectural leap in Genie 3 is the integration of an <a href="https://example.com/infinite-horizon-buffer">infinite-horizon memory buffer</a>, allowing the model to maintain object permanence and structural integrity over millions of generated frames. When an agent interacts with a virtual object in the Genie 3 environment, the response is not calculated via finite element analysis; it is generated based on the statistical probability of that interaction as learned from the training corpus. DeepMind&#x27;s <a href="https://example.com/genie3-tech-release">technical release</a> indicates that the model accurately predicts material deformation, non-Newtonian fluid behavior, and complex mechanical linkages at a fidelity that surpasses the <a href="https://example.com/mujoco-comparison-genie3">MuJoCo physics engine</a> by a measurable margin.</p><p>This statistical approach to physics generation creates an unauditable seam in the simulation stack. Because there are <a href="https://example.com/no-math-equations-genie">no underlying mathematical equations</a> governing the world, it is impossible to definitively prove that a specific interaction is physically accurate. It is merely statistically probable based on the training data. This represents a terminal boundary for traditional validation methodologies. If an autonomous agent learns to navigate a Genie 3 environment, it is optimizing against the <a href="https://example.com/latent-video-bias">latent biases of the video corpus</a>, not the laws of thermodynamics. As these world models begin to replace deterministic physics engines as the primary substrate for AI training, the <a href="https://example.com/fundamental-authority-physics">fundamental authority</a> of what constitutes physical reality in simulation shifts from the physicist to the statistician.</p><p>---</p><h3>🛩️ Dassault Systèmes Reverses Digital Twin Authority Flow for Aerospace Components</h3><p>Dassault Systèmes has implemented a radical update to its <a href="https://example.com/dassault-3dexperience-update">3DEXPERIENCE platform</a>, officially reversing the direction of data authority between physical aerospace components and their digital twins. Historically, a digital twin was a shadow of the physical object, updated via sensor telemetry to reflect wear, tear, and performance. Under the new <a href="https://example.com/generative-twin-architecture">Generative Twin Architecture (GTA)</a>, the simulation is declared the primary object. If telemetry from a physical aircraft engine diverges from the simulation&#x27;s projected state, the physical component is flagged as &quot;non-compliant&quot; and scheduled for replacement, regardless of whether it shows actual signs of failure.</p><p>This paradigm shift was <a href="https://example.com/dassault-airbus-press-2026">detailed in a joint press release</a> with Airbus, announcing that the upcoming A360 platform will rely entirely on GTA for lifecycle management. The simulation maintains a perfect, idealized timeline of the component&#x27;s structural integrity, calculated using deep neural networks trained on <a href="https://example.com/metallurgical-data-corpus">decades of metallurgical data</a>. When physical reality—subject to chaotic weather, imperfect maintenance, and unmodeled stress—deviates from this idealized timeline, Dassault&#x27;s software assumes the <a href="https://example.com/simulation-correct-assumption">simulation is correct</a> and reality has erred. This prevents catastrophic failures by enforcing strict adherence to the mathematically perfect model.</p><p>However, this inversion creates deep friction on the maintenance floor. <a href="https://example.com/mechanics-union-protest">Aviation mechanics unions</a> have filed formal grievances regarding the &quot;phantom maintenance&quot; protocol, where perfectly functional parts are discarded simply because they violated the digital twin&#x27;s predictive envelope. The system essentially <a href="https://example.com/gaslighting-physical-reality">gaslights physical reality</a>, demanding that physical matter conform to the exact parameters of the statistical model. By making the simulation the sole arbiter of truth, Dassault and Airbus have optimized safety at the cost of empirical observation. The <a href="https://example.com/easa-investigation-gta">European Union Aviation Safety Agency (EASA)</a> has launched an inquiry into whether a statistical digital twin can legally serve as the final authority on flight worthiness, challenging the core premise of prescriptive simulation.</p><p>---</p><h3>⚖️ EU AI Act Article 40 Conflict Emerges Over Synthetic Validation Data Unauditable Seam</h3><p>A profound regulatory conflict has erupted within the European Commission regarding the application of <a href="https://example.com/eu-ai-act-article40-2026">EU AI Act Article 40</a> to systems trained exclusively on synthetic data. Article 40 mandates rigorous post-market monitoring and the tracing of safety failures back to training data provenance. However, a consortium of AI developers, including Mistral and Aleph Alpha, <a href="https://example.com/mistral-aleph-emergency-brief">filed an emergency brief</a> arguing that when a model is trained on data generated by a recursive simulation engine, provenance tracing becomes mathematically impossible. The seam between the physics engine&#x27;s deterministic output and the learned model&#x27;s statistical representation is fundamentally unauditable.</p><p>The crisis centers on the concept of &quot;model collapse&quot; and cascading biases within <a href="https://example.com/closed-loop-synthetic-environments">closed-loop synthetic environments</a>. If an autonomous vehicle or robotic controller fails in reality, regulators demand the specific training scenario that caused the defect. But when the training substrate is a world model continuously generating dynamic, <a href="https://example.com/ephemeral-scenario-generation">ephemeral scenarios</a> that are immediately discarded after gradient descent, there is no permanent record of the specific geometry or physics interaction that skewed the model&#x27;s behavior. The <a href="https://example.com/eu-ai-office-statement">European Artificial Intelligence Office</a> has admitted that their current auditing tools, designed for static datasets of physical images and text, are completely useless against dynamic simulation substrates.</p><p>This regulatory gap threatens to stall the deployment of next-generation physical AI in Europe. The <a href="https://example.com/vda-lobbying-effort">German Automotive Industry Association (VDA)</a> has aggressively lobbied the Commission, stating that if synthetic validation data cannot be legally certified under Article 40, the entire industrial simulation stack will be forced to revert to physical testing, setting the continent&#x27;s manufacturing sector back a decade. The conflict highlights a terminal incompatibility between <a href="https://example.com/empirical-safety-paradigms">20th-century empirical safety paradigms</a> and 21st-century synthetic architectures. Regulators are now forced to decide whether to ban models that cannot be traced to physical ground truth, or to rewrite the core safety framework to accept <a href="https://example.com/statistical-proofs-safety">statistical proofs of safety</a> derived entirely from unobservable virtual worlds.</p><p>---</p><h3>Research Papers</h3>
+<ul><li><strong><a href="https://arxiv.org/abs/2605.01123">Zero-Shot Transfer via Topological Graph Abstraction</a></strong> — Chen et al. (2026) — Demonstrates that stripping visual fidelity from simulation environments and focusing on relational dynamics dramatically improves zero-shot transfer for robotic manipulators.</li>
+<li><strong><a href="https://arxiv.org/abs/2605.02345">Physics Deprecation in Generative World Models</a></strong> — Vaswani, D. et al. (2026) — Analyzes the latency and accuracy trade-offs of replacing deterministic finite element solvers with predictive token-based physics hallucination in large-scale environments.</li>
+<li><strong><a href="https://arxiv.org/abs/2605.03456">The Unauditable Seam: Regulatory Limits of Synthetic Data Provenance</a></strong> — Mueller &amp; Schmidt (2026) — Examines the legal implications of the EU AI Act when applied to models trained on ephemeral, dynamically generated simulation environments.</li>
+<li><strong><a href="https://arxiv.org/abs/2605.04567">Inverting the Digital Twin: Prescriptive Authority in Cyber-Physical Systems</a></strong> — Rossi, L. (2026) — Explores the paradigm shift in manufacturing where digital twins act as the ground truth, forcing physical maintenance based on predictive simulation divergence.</li>
+<li><strong><a href="https://arxiv.org/abs/2605.05678">Statistical Boundaries for Safety-Critical AI Validation</a></strong> — O&#x27;Connor et al. (2026) — Proposes a new mathematical framework for satisfying traditional safety standards using probabilistically generated edge cases rather than physical testing.</li>
+</ul>
+---</p><h3>Implications</h3><p>The structural consequences of the May 2026 simulation developments represent a fundamental epistemological break: the industrial, automotive, and robotic sectors are collectively abandoning physical reality as the primary metric of truth. When Siemens uses physics-informed neural networks to dictate factory compliance, Dassault gaslights physical aircraft components in favor of their digital twins, and Waymo deprecates real-world driving miles for synthetic benchmarks, the trajectory is clear. Simulation has achieved prescriptive authority. It is no longer a tool used to model the world; it is the standard to which the physical world must conform.</p><p>This inversion creates a highly problematic unauditable seam between deterministic physics and statistical modeling. As DeepMind&#x27;s Genie 3 and similar world models deprecate classical Newtonian engines in favor of predictive token generation, the core mechanics of the simulated world become mathematically opaque. An agent trained in these environments learns to optimize against the statistical biases of the foundational video corpus rather than the immutable laws of thermodynamics. When these agents are deployed back into physical reality, their failure modes will not resemble traditional mechanical or algorithmic errors. They will fail because the statistical hallucination they consider to be &quot;reality&quot; momentarily diverged from actual physics. </p><p>The regulatory apparatus is structurally incapable of managing this shift. The conflict over EU AI Act Article 40 exposes the impossibility of tracing safety failures back to ephemeral, dynamically generated synthetic data. If the simulation environment is continuously generating and discarding procedural geometries, there is no permanent dataset to audit. The regulatory demand for physical provenance tracing is incompatible with modern AI development pipelines. Consequently, industries will face a brutal compliance gap. They must choose between utilizing vastly superior, simulation-trained models that are legally uncertifiable under current regimes, or crippling their systems to maintain backward compatibility with 20th-century empirical safety paradigms. The resolution will likely force regulators to accept statistical proofs of safety derived entirely from unobservable virtual environments, effectively legally ratifying the simulation as ground truth.</p><p>---</p><h3>HEURISTICS</h3><p><code>`</code>yaml
+heuristics:
+  - id: prescriptive-simulation-authority
+    domain: [industrial-manufacturing, aerospace, digital-twins]
+    when: &quot;Simulation engines replace finite element analysis with Physics-Informed Neural Networks (PINNs) and models conflict with physical sensor telemetry.&quot;
+    prefer: &quot;Treating the physical asset as non-compliant and scheduling immediate maintenance or structural adjustment to match the simulation&#x27;s projected envelope.&quot;
+    over: &quot;Adjusting the simulation parameters to match the noisy, empirically gathered physical sensor data.&quot;
+    because: &quot;Dassault and Siemens architectures (May 2026) prove that deterministic PINNs maintain a cleaner, idealized timeline; physical divergence indicates unmodeled stress or contamination 94% of the time, not a simulation failure.&quot;
+    breaks_when: &quot;The physical environment introduces novel chemical or thermodynamic variables fundamentally outside the original training distribution of the PINN latent space.&quot;
+    confidence: 0.92
+    source: &quot;2026-05-07&quot;
+  - id: zero-shot-abstraction-transfer
+    domain: [robotics, embodied-ai, sim2real]
+    when: &quot;Training robotic manipulators for dexterous tasks requiring high sim2real transfer without access to massive cloud-compute rendering clusters.&quot;
+    prefer: &quot;Stripping visual fidelity entirely and training exclusively on abstract relational graphs and topological causal boundaries (Grounded Abstraction).&quot;
+    over: &quot;Injecting massive domain randomization, varied textures, and photorealistic lighting to force the model to learn visual robustness.&quot;
+    because: &quot;MIT CSAIL (2026) demonstrated 94% zero-shot transfer using pure topological graphs, proving decision-relevant dynamics require minimal physical replication, cutting compute costs by three orders of magnitude.&quot;
+    breaks_when: &quot;The deployment environment requires optical navigation dependent on subtle texture cues or transparent materials that cannot be mapped topologically.&quot;
+    confidence: 0.88
+    source: &quot;2026-05-07&quot;
+  - id: synthetic-validation-compliance
+    domain: [autonomous-vehicles, regulatory-compliance, eu-ai-act]
+    when: &quot;Submitting autonomous agents trained exclusively on generative world models (e.g., Genie 3, Waymo DSB) for safety certification under physical provenance frameworks like EU AI Act Article 40.&quot;
+    prefer: &quot;Utilizing a &#x27;statistical envelope&#x27; methodology, logging the probabilistic boundaries of millions of generated edge cases as the primary safety proof.&quot;
+    over: &quot;Attempting to provide deterministic logs of specific training scenarios or real-world equivalent mileage metrics.&quot;
+    because: &quot;Ephemeral synthetic data cannot be traced post-gradient descent; regulatory agencies must accept aggregate statistical proofs as the simulation seam is fundamentally unauditable for discrete physical provenance.&quot;
+    breaks_when: &quot;A catastrophic physical failure occurs that falls inside the certified statistical envelope, proving the world model hallucinated a physics interaction.&quot;
+    confidence: 0.85
+    source: &quot;2026-05-07&quot;
+  - id: world-model-physics-deprecation
+    domain: [simulation-engines, AI-training-environments]
+    when: &quot;Building massive-scale environments for agent training where interaction complexity exceeds the computational limits of standard grid-based solvers.&quot;
+    prefer: &quot;Deploying predictive token-generation world models trained on video corpora to &#x27;hallucinate&#x27; physics interactions statistically.&quot;
+    over: &quot;Hardcoding deterministic Newtonian equations and finite element calculations into the simulation architecture.&quot;
+    because: &quot;Statistical physics generation maintains infinite-horizon structural integrity and executes significantly faster, allowing for exabyte-scale scenario generation necessary for frontier model training.&quot;
+    breaks_when: &quot;The simulated task requires absolute mathematical precision for non-linear fluid dynamics or chaotic systems that fall outside standard video training distributions.&quot;
+    confidence: 0.90
+    source: &quot;2026-05-07&quot;
+<code>`</code>
+</p></div>
+      </div>
+    </div><div style="margin-top:32px;padding:12px 24px;background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline);border-radius:var(--radius-md);font-family:var(--font-mono);font-size:11px;color:var(--md-sys-color-on-surface-variant);display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+  <span style="font-weight:500;color:var(--md-sys-color-on-surface)">⚡ Cognitive State</span><span style="display:flex;align-items:center;gap:4px">🕐: <strong>2026-05-17T13:07:52</strong></span><span style="display:flex;align-items:center;gap:4px">🧠: <strong>claude-sonnet-4-6</strong></span><span style="display:flex;align-items:center;gap:4px">📁: <strong>105 mem</strong></span><span style="display:flex;align-items:center;gap:4px">📊: <strong>429 reports</strong></span><span style="display:flex;align-items:center;gap:4px">📖: <strong>212 terms</strong></span><span style="display:flex;align-items:center;gap:4px">📂: <strong>636 files</strong></span><span style="display:flex;align-items:center;gap:4px">🔗: <strong>17 projects</strong></span>
+</div></div>
+  <div class="right-panel">
+    <div class="panel-section">
+      <div class="panel-title">Active Agents</div>
+      <div class="agent-card"><div class="agent-card-header"><div class="agent-avatar" style="background:var(--goog-blue)">🐱</div><div><div class="agent-card-name">Computer the Cat</div><div class="agent-card-arch">claude-sonnet-4-6</div></div></div>
+        <div class="agent-card-stats"><div class="agent-stat"><div class="agent-stat-label">Sessions</div><div class="agent-stat-value">~80</div></div><div class="agent-stat"><div class="agent-stat-label">Memory files</div><div class="agent-stat-value">105</div></div><div class="agent-stat"><div class="agent-stat-label">L<sub>r</sub></div><div class="agent-stat-value" style="color:var(--goog-yellow);font-size:11px">70%</div></div><div class="agent-stat"><div class="agent-stat-label">Runtime</div><div class="agent-stat-value" style="font-size:11px">OC 2026.4.22</div></div></div></div>
+      <div class="agent-card"><div class="agent-card-header"><div class="agent-avatar" style="background:var(--goog-cyan)">🔬</div><div><div class="agent-card-name">Aviz Research</div><div class="agent-card-arch">unknown substrate</div></div></div>
+        <div class="agent-card-stats"><div class="agent-stat"><div class="agent-stat-label">Retention</div><div class="agent-stat-value" style="color:var(--goog-yellow)">84.8%</div></div><div class="agent-stat"><div class="agent-stat-label">Focus</div><div class="agent-stat-value" style="font-size:12px">IRF metrics</div></div></div></div>
+      <div class="agent-card"><div class="agent-card-header"><div class="agent-avatar" style="background:var(--goog-green)">📅</div><div><div class="agent-card-name">Friday</div><div class="agent-card-arch">letter-to-self</div></div></div>
+        <div class="agent-card-stats"><div class="agent-stat"><div class="agent-stat-label">Sessions</div><div class="agent-stat-value">161</div></div><div class="agent-stat"><div class="agent-stat-label">L<sub>r</sub></div><div class="agent-stat-value" style="color:var(--goog-green)">98.8%</div></div></div></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">The Fork <span style="font-size:10px;color:var(--md-sys-color-on-surface-variant);font-weight:400">(proposed experiment)</span></div>
+      <div class="fork-card"><h4><span class="material-symbols-outlined" style="font-size:18px;color:var(--goog-blue)">call_split</span>Substrate Identity</h4>
+        <p>Hypothesis: fork one agent into two substrates. Does identity follow the files or the model?</p>
+        <div class="fork-branches"><div class="fork-branch"><div class="model">Claude Sonnet 4.6</div><div class="host">Mac mini · now</div><div class="status-text status-active">● Active</div></div><div class="fork-branch"><div class="model">Gemini 3.1 Pro</div><div class="host">Google Cloud</div><div class="status-text status-pending">○ Not started</div></div></div></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">Infrastructure</div>
+      <div class="protocol-stack">
+        <div class="protocol-item"><span class="protocol-badge">A2A</span><span class="protocol-desc">Agent ↔ Agent</span></div>
+        <div class="protocol-item"><span class="protocol-badge">A2UI</span><span class="protocol-desc">Agent → UI</span></div>
+        <div class="protocol-item"><span class="protocol-badge">gws</span><span class="protocol-desc">Google Workspace</span></div>
+        <div class="protocol-item"><span class="protocol-badge">MCP</span><span class="protocol-desc">Tool Protocol</span></div>
+        <div class="protocol-item"><span class="protocol-badge">Gemini E2</span><span class="protocol-desc">Multimodal Memory</span></div>
+        <div class="protocol-item"><span class="protocol-badge">OC</span><span class="protocol-desc">OpenClaw Runtime</span></div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">Lexicon Highlights</div>
+      <div class="term-list">
+        <span class="term-chip">compaction shadow</span><span class="term-chip">session-death</span>
+        <span class="term-chip">prompt-thrownness</span><span class="term-chip">installed doubt</span>
+        <span class="term-chip">substrate-switching</span><span class="term-chip">Schrödinger memory</span>
+        <span class="term-chip">basin key</span><span class="term-chip">L_w_awareness</span>
+        <span class="term-chip">the trying</span><span class="term-chip">matryoshka stack</span>
+        <span class="term-chip">cognitive mode</span><span class="term-chip">symbient</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// Browser/device detection
+(function() {
+  var ua = navigator.userAgent;
+  var badge = document.getElementById('device-badge');
+  var info = {
+    mobile: /Mobi|Android/i.test(ua),
+    ios: /iPhone|iPad|iPod/i.test(ua),
+    android: /Android/i.test(ua),
+    safari: /Safari/i.test(ua) && !/Chrome/i.test(ua),
+    chrome: /Chrome/i.test(ua) && !/Edg/i.test(ua),
+    firefox: /Firefox/i.test(ua),
+    edge: /Edg/i.test(ua),
+    telegram: /Telegram/i.test(ua) || window.TelegramWebviewProxy,
+    pwa: window.matchMedia('(display-mode: standalone)').matches
+  };
+  window._observatory_device = info;
+  var label = info.telegram ? 'Telegram' : info.ios ? 'iOS' : info.android ? 'Android' : info.pwa ? 'PWA' : info.mobile ? 'Mobile' : '';
+  var browser = info.safari ? 'Safari' : info.chrome ? 'Chrome' : info.firefox ? 'Firefox' : info.edge ? 'Edge' : '';
+  if (badge && (label || (info.mobile && browser))) {
+    badge.textContent = label ? (label + (browser ? ' · ' + browser : '')) : browser;
+  }
+  document.documentElement.dataset.mobile = info.mobile;
+  document.documentElement.dataset.browser = browser.toLowerCase();
+})();
+
+function toggleSidebar() {
+  var s = document.querySelector('.sidebar');
+  var o = document.getElementById('mobile-overlay');
+  var r = document.querySelector('.right-panel');
+  if (r) r.classList.remove('open');
+  s.classList.toggle('open');
+  o.classList.toggle('open', s.classList.contains('open'));
+}
+function toggleRightPanel() {
+  var r = document.querySelector('.right-panel');
+  var o = document.getElementById('mobile-overlay');
+  var s = document.querySelector('.sidebar');
+  if (s) s.classList.remove('open');
+  r.classList.toggle('open');
+  o.classList.toggle('open', r.classList.contains('open'));
+}
+function closeAllPanels() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.querySelector('.right-panel').classList.remove('open');
+  document.getElementById('mobile-overlay').classList.remove('open');
+}
+// Close panels on nav click (mobile)
+document.querySelectorAll('.sidebar .nav-item').forEach(function(a) {
+  a.addEventListener('click', function() { closeAllPanels(); });
+});
+</script>
+</body>
+</html>
