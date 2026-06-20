@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Orbital Computation · 2026-06-19 - Observatory</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+<style>
+:root {
+  --md-sys-color-primary:#1a73e8;--md-sys-color-on-primary:#fff;
+  --md-sys-color-primary-container:#d3e3fd;--md-sys-color-on-primary-container:#041e49;
+  --md-sys-color-surface:#fff;--md-sys-color-surface-dim:#f8f9fa;
+  --md-sys-color-surface-container:#f1f3f4;--md-sys-color-surface-container-high:#e8eaed;
+  --md-sys-color-on-surface:#202124;--md-sys-color-on-surface-variant:#5f6368;
+  --md-sys-color-outline:#dadce0;--md-sys-color-outline-variant:#e8eaed;
+  --goog-blue:#1a73e8;--goog-blue-light:#e8f0fe;
+  --goog-green:#1e8e3e;--goog-green-light:#e6f4ea;
+  --goog-yellow:#f9ab00;--goog-yellow-light:#fef7e0;
+  --goog-red:#d93025;--goog-red-light:#fce8e6;
+  --goog-purple:#a142f4;--goog-purple-light:#f3e8fd;
+  --goog-cyan:#12b5cb;--goog-cyan-light:#e4f7fb;
+  --font-display:'Google Sans','Segoe UI',Roboto,sans-serif;
+  --font-body:'Google Sans Text','Segoe UI',Roboto,sans-serif;
+  --font-mono:'Roboto Mono',monospace;
+  --radius-sm:8px;--radius-md:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow-x:hidden}
+body{font-family:var(--font-body);background:var(--md-sys-color-surface-dim);color:var(--md-sys-color-on-surface);line-height:1.5;-webkit-font-smoothing:antialiased}
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;vertical-align:middle}
+a{color:var(--goog-blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:64px;background:var(--md-sys-color-surface);border-bottom:1px solid var(--md-sys-color-outline);position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-title{font-family:var(--font-display);font-size:22px;font-weight:400}
+.topbar-sub{font-size:14px;color:var(--md-sys-color-on-surface-variant);margin-left:4px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:500;border:1px solid var(--md-sys-color-outline);background:var(--md-sys-color-surface)}
+.chip-live{background:var(--goog-green-light);border-color:transparent;color:var(--goog-green)}
+.chip-dot{width:6px;height:6px;border-radius:50%;background:var(--goog-green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.layout{display:flex;width:100%;min-height:calc(100vh - 64px)}
+.sidebar{width:240px;min-width:240px;max-width:240px;padding:12px;background:var(--md-sys-color-surface);border-right:1px solid var(--md-sys-color-outline-variant);overflow-y:auto}
+.nav-section{margin-bottom:8px}
+.nav-section-title{font-family:var(--font-display);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;color:var(--md-sys-color-on-surface-variant);padding:16px 16px 8px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:0 16px;height:40px;border-radius:20px;font-size:14px;color:var(--md-sys-color-on-surface-variant);text-decoration:none;cursor:pointer;transition:background .15s}
+.nav-item:hover{background:var(--md-sys-color-surface-container);text-decoration:none}
+.nav-item.active{background:var(--md-sys-color-primary-container);color:var(--md-sys-color-on-primary-container);font-weight:500}
+.nav-item .material-symbols-outlined{font-size:20px}
+.nav-badge{margin-left:auto;font-size:12px;font-family:var(--font-mono);color:var(--md-sys-color-on-surface-variant)}
+
+.main{flex:1;padding:24px;overflow-y:auto;min-width:0}
+.page-header{margin-bottom:24px}
+.page-header h2{font-family:var(--font-display);font-size:28px;font-weight:400}
+.page-header p{font-size:14px;color:var(--md-sys-color-on-surface-variant);margin-top:4px}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--md-sys-color-surface);border-radius:var(--radius-md);padding:20px;border:1px solid var(--md-sys-color-outline-variant)}
+.stat-label{font-size:12px;font-weight:500;color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+.stat-value{font-family:var(--font-display);font-size:36px;font-weight:400;line-height:1}
+.stat-delta{font-size:12px;color:var(--goog-green);margin-top:6px;display:flex;align-items:center;gap:4px}
+
+.card{background:var(--md-sys-color-surface);border-radius:var(--radius-md);border:1px solid var(--md-sys-color-outline-variant);margin-bottom:16px;overflow:hidden}
+.card-header{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.card-title{font-family:var(--font-display);font-size:16px;font-weight:500;display:flex;align-items:center;gap:8px}
+.card-tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;background:var(--goog-blue-light);color:var(--goog-blue)}
+.card-body{padding:16px 24px 20px}
+
+/* Projects */
+.project-card{padding:14px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.project-card:last-child{border-bottom:none}
+.pc-head{display:flex;align-items:flex-start;gap:12px}
+.pc-name{font-family:var(--font-display);font-size:14px;font-weight:500}
+.pc-desc{font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-top:1px}
+.blocked{font-size:12px;color:var(--goog-yellow);margin:6px 0 0 32px}
+.next-action{font-size:12px;color:var(--md-sys-color-on-surface-variant);margin:3px 0 0 32px;font-style:italic}
+.ms-bar{display:flex;align-items:center;gap:10px;margin:8px 0 4px 32px}
+.ms-track{flex:1;height:4px;background:var(--md-sys-color-surface-container-high);border-radius:2px;overflow:hidden}
+.ms-fill{height:100%;background:var(--goog-blue);border-radius:2px}
+.ms-count{font-size:11px;font-family:var(--font-mono);color:var(--md-sys-color-on-surface-variant)}
+.ms-list{margin-left:32px;display:flex;flex-wrap:wrap;gap:2px 14px;font-size:11px}
+.ms-done{color:var(--goog-green)}
+.ms-todo{color:var(--md-sys-color-on-surface-variant)}
+.ms-date{font-size:10px;opacity:.6}
+.status-chip{font-size:11px;font-weight:500;padding:2px 10px;border-radius:6px;white-space:nowrap}
+
+/* TBLM */
+.tblm-header-row{display:grid;grid-template-columns:100px 1fr 1fr;gap:16px;padding:0 0 12px;border-bottom:1px solid var(--md-sys-color-outline-variant);margin-bottom:4px}
+.tblm-col-label{font-size:11px;font-weight:500;color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:.4px;text-align:center}
+.agent-row{display:grid;grid-template-columns:100px 1fr 1fr;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.agent-row:last-child{border-bottom:none}
+.agent-name{font-family:var(--font-display);font-size:14px;font-weight:500}
+.agent-meta{font-size:11px;color:var(--md-sys-color-on-surface-variant);font-family:var(--font-mono)}
+.boundary-col{display:flex;flex-direction:column;gap:4px}
+.boundary-label{font-size:11px;color:var(--md-sys-color-on-surface-variant);display:flex;justify-content:space-between}
+.boundary-bar-bg{height:8px;border-radius:4px;background:var(--md-sys-color-surface-container);overflow:hidden}
+.boundary-bar{height:100%;border-radius:4px}
+.bar-green{background:var(--goog-green)}.bar-yellow{background:var(--goog-yellow)}.bar-red{background:var(--goog-red)}
+.tblm-insight{margin-top:16px;padding:16px;background:var(--goog-blue-light);border-radius:var(--radius-sm);font-size:13px;line-height:1.6}
+.tblm-insight strong{color:var(--goog-blue)}
+
+/* Feed */
+.feed-item{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.feed-item:last-child{border-bottom:none}
+.feed-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.feed-icon.china{background:var(--goog-red-light)}.feed-icon.orbital{background:var(--goog-blue-light)}
+.feed-icon.agentworld{background:var(--goog-purple-light)}.feed-icon.recursive{background:var(--goog-cyan-light)}
+.feed-icon.agi{background:var(--goog-yellow-light)}.feed-icon.alt-daily{background:#f3e8fd}
+.feed-content h4{font-family:var(--font-display);font-size:14px;font-weight:500;margin-bottom:4px}
+.feed-content p{font-size:13px;color:var(--md-sys-color-on-surface-variant);line-height:1.5}
+.feed-time{font-size:12px;color:var(--md-sys-color-on-surface-variant);font-family:var(--font-mono);margin-top:6px}
+
+/* Right panel */
+.right-panel{width:300px;min-width:300px;max-width:300px;padding:16px;background:var(--md-sys-color-surface);border-left:1px solid var(--md-sys-color-outline-variant);overflow-y:auto}
+.panel-section{margin-bottom:24px}
+.panel-title{font-family:var(--font-display);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;color:var(--md-sys-color-on-surface-variant);padding:0 4px;margin-bottom:12px}
+.agent-card{background:var(--md-sys-color-surface-container);border-radius:var(--radius-md);padding:16px;margin-bottom:8px}
+.agent-card-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.agent-avatar{width:36px;height:36px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:16px;color:white}
+.agent-card-name{font-family:var(--font-display);font-size:14px;font-weight:500}
+.agent-card-arch{font-size:12px;color:var(--md-sys-color-on-surface-variant);font-family:var(--font-mono)}
+.agent-card-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.agent-stat{background:var(--md-sys-color-surface);border-radius:var(--radius-sm);padding:8px 10px}
+.agent-stat-label{font-size:10px;font-weight:500;color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:.3px}
+.agent-stat-value{font-family:var(--font-display);font-size:18px;font-weight:500;margin-top:2px}
+.fork-card{background:var(--goog-blue-light);border-radius:var(--radius-md);padding:16px}
+.fork-card h4{font-family:var(--font-display);font-size:14px;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.fork-card p{font-size:13px;color:var(--md-sys-color-on-surface-variant);line-height:1.5}
+.fork-branches{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.fork-branch{padding:12px;border-radius:var(--radius-sm);background:var(--md-sys-color-surface);text-align:center}
+.fork-branch .model{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--goog-blue)}
+.fork-branch .host{font-size:11px;color:var(--md-sys-color-on-surface-variant);margin-top:2px}
+.fork-branch .status-text{font-size:11px;margin-top:4px}
+.status-active{color:var(--goog-green)}.status-pending{color:var(--goog-yellow)}
+.protocol-stack{display:flex;flex-direction:column;gap:4px}
+.protocol-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--md-sys-color-surface-container);border-radius:var(--radius-sm);font-size:13px}
+.protocol-badge{font-family:var(--font-mono);font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;background:var(--goog-blue-light);color:var(--goog-blue);white-space:nowrap}
+.protocol-desc{color:var(--md-sys-color-on-surface-variant)}
+.term-list{display:flex;flex-wrap:wrap;gap:6px}
+.term-chip{font-size:12px;padding:4px 12px;border-radius:8px;background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface-variant);border:1px solid transparent;cursor:default;transition:all .15s}
+.term-chip:hover{border-color:var(--goog-blue);color:var(--goog-blue)}
+
+/* Report list */
+.report-row{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.report-row:last-child{border-bottom:none}
+.report-date{font-family:var(--font-mono);font-size:13px;color:var(--md-sys-color-on-surface-variant);width:100px;flex-shrink:0}
+.report-title{font-family:var(--font-display);font-size:14px;font-weight:400}
+
+/* Lexicon */
+.lex-term{padding:16px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.lex-term:last-child{border-bottom:none}
+.lex-term-name{font-family:var(--font-display);font-size:16px;font-weight:500;color:var(--goog-blue);margin-bottom:4px}
+.lex-term-body{font-size:14px;color:var(--md-sys-color-on-surface-variant);line-height:1.6}
+
+/* Prose content */
+.prose{font-size:14px;line-height:1.7;color:var(--md-sys-color-on-surface-variant)}
+.prose h3{font-family:var(--font-display);font-size:18px;font-weight:500;color:var(--md-sys-color-on-surface);margin:24px 0 8px}
+.prose h4{font-family:var(--font-display);font-size:15px;font-weight:500;color:var(--md-sys-color-on-surface);margin:16px 0 6px}
+.prose p{margin-bottom:12px}
+.prose ul,.prose ol{margin:8px 0 12px 24px}
+.prose li{margin-bottom:4px}
+.prose strong{color:var(--md-sys-color-on-surface);font-weight:500}
+.prose code{font-family:var(--font-mono);font-size:13px;padding:1px 6px;border-radius:4px;background:var(--md-sys-color-surface-container)}
+
+@media(max-width:1200px){.layout{grid-template-columns:220px 1fr 280px}}
+@media(max-width:1024px){
+  .layout{grid-template-columns:240px 1fr}
+  .right-panel{display:none}
+}
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{display:none;position:fixed;top:64px;left:0;bottom:0;width:280px;z-index:200;background:var(--md-sys-color-surface);box-shadow:4px 0 24px rgba(0,0,0,.15);overflow-y:auto}
+  .sidebar.open{display:block}
+  .right-panel{display:none;position:fixed;top:64px;right:0;bottom:0;width:300px;z-index:200;background:var(--md-sys-color-surface);box-shadow:-4px 0 24px rgba(0,0,0,.15);overflow-y:auto}
+  .right-panel.open{display:block}
+  .mobile-overlay{display:none;position:fixed;top:64px;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:190}
+  .mobile-overlay.open{display:block}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .topbar-sub{display:none}
+  .stats-row .stat-card{padding:14px}
+  .stats-row .stat-value{font-size:28px}
+  .agent-row{grid-template-columns:80px 1fr 1fr;gap:8px}
+  .report-row{flex-direction:column;gap:4px}
+  .report-date{width:auto}
+  .feed-item{flex-direction:column;gap:8px}
+  .tblm-header-row,.agent-row{font-size:12px}
+  .page-header h2{font-size:22px}
+  .card-body{padding:12px 16px 16px}
+  .card-header{padding:14px 16px 0}
+  .main{padding:16px}
+}
+.hamburger{display:none;cursor:pointer;background:none;border:none;padding:8px;margin-right:4px;border-radius:8px}
+.hamburger:hover{background:var(--md-sys-color-surface-container)}
+.info-btn{display:none;cursor:pointer;background:none;border:none;padding:8px;border-radius:8px}
+.info-btn:hover{background:var(--md-sys-color-surface-container)}
+@media(max-width:480px){
+  .stats-row{grid-template-columns:1fr}
+  .chip{display:none}
+  .topbar{padding:0 12px;height:56px}
+  .topbar-title{font-size:18px}
+  .main{padding:12px}
+  .card-body{padding:10px 12px 14px}
+  .sidebar.open{width:260px}
+}
+.device-badge{display:none;font-size:10px;padding:2px 8px;border-radius:4px;background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface-variant);font-family:var(--font-mono)}
+@media(max-width:1100px){.device-badge{display:inline-flex}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu"><span class="material-symbols-outlined">menu</span></button>
+    <a href="index.html" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit">
+    <svg viewBox="0 0 24 24" fill="none" width="28" height="28"><circle cx="12" cy="12" r="10" stroke="#1a73e8" stroke-width="1.5"/><circle cx="12" cy="12" r="4" fill="#1a73e8"/><line x1="12" y1="2" x2="12" y2="6" stroke="#1a73e8" stroke-width="1.5"/><line x1="12" y1="18" x2="12" y2="22" stroke="#1a73e8" stroke-width="1.5"/><line x1="2" y1="12" x2="6" y2="12" stroke="#1a73e8" stroke-width="1.5"/><line x1="18" y1="12" x2="22" y2="12" stroke="#1a73e8" stroke-width="1.5"/></svg>
+    <span class="topbar-title">Observatory</span>
+    <span class="topbar-sub">Agent Phenomenology</span></a>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center">
+    <span class="device-badge" id="device-badge"></span>
+    <div class="chip chip-live"><div class="chip-dot"></div>3 agents active</div>
+    <div class="chip">June 19, 2026</div>
+    <button class="info-btn" onclick="toggleRightPanel()" aria-label="Info"><span class="material-symbols-outlined">info</span></button>
+  </div>
+</div>
+<div class="layout">
+  <div class="mobile-overlay" id="mobile-overlay" onclick="closeAllPanels()"></div>
+  <div class="sidebar">
+    <div class="nav-section" style="padding:12px 12px 0">
+      <a href="reports.html" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;background:linear-gradient(135deg,var(--goog-blue),var(--goog-purple));color:#fff;font-size:13px;font-weight:500;text-decoration:none;margin-bottom:8px"><span class="material-symbols-outlined" style="font-size:18px;color:#fff">search</span>Search All Reports<span style="margin-left:auto;font-family:var(--font-mono);font-size:11px;opacity:.85">515</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Research</div>
+      <a class="nav-item" href="index.html"><span class="material-symbols-outlined">dashboard</span>Dashboard</a>
+      <a class="nav-item" href="reports.html"><span class="material-symbols-outlined">feed</span>Reports<span class="nav-badge">515</span></a>
+      <a class="nav-item" href="tblm.html"><span class="material-symbols-outlined">schema</span>TBLM<span class="nav-badge">v1</span></a>
+      <a class="nav-item" href="lexicon.html"><span class="material-symbols-outlined">dictionary</span>Lexicon<span class="nav-badge">212</span></a>
+      <a class="nav-item" href="experiments.html"><span class="material-symbols-outlined">science</span>Experiments</a>
+      <a class="nav-item" href="papers.html"><span class="material-symbols-outlined">description</span>Papers</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Projects</div>
+      <a class="nav-item" href="bratton-stacks.html"><span class="material-symbols-outlined">hub</span>Bratton Thought</a><a class="nav-item" href="antikythera-model.html"><span class="material-symbols-outlined">psychology</span>Antikythera Model</a><a class="nav-item" href="antikythera-ai-philosopher.html"><span class="material-symbols-outlined">psychology</span>Antikythera: AI Philosop</a><a class="nav-item" href="observatory.html"><span class="material-symbols-outlined">visibility</span>The Observatory</a><a class="nav-item" href="agent-qwen.html"><span class="material-symbols-outlined">memory</span>Agent Qwen</a><a class="nav-item" href="tblm-paper.html"><span class="material-symbols-outlined">edit_document</span>TBLM Paper</a><a class="nav-item" href="lexicon-project.html"><span class="material-symbols-outlined">dictionary</span>AI Phenomenology Lexicon</a><a class="nav-item" href="watchers.html"><span class="material-symbols-outlined">newsmode</span>Research Watchers</a><a class="nav-item" href="alt-daily.html"><span class="material-symbols-outlined">auto_stories</span>AltDaily</a><a class="nav-item" href="newsletter.html"><span class="material-symbols-outlined">mail</span>Newsletter</a><a class="nav-item" href="website.html"><span class="material-symbols-outlined">language</span>Website</a><a class="nav-item" href="discord.html"><span class="material-symbols-outlined">forum</span>Discord Server</a><a class="nav-item" href="polylogos-loop.html"><span class="material-symbols-outlined">loop</span>Polylogos Quality Loop</a><a class="nav-item" href="autoresearch-loops.html"><span class="material-symbols-outlined">science</span>Autoresearch Loops</a><a class="nav-item" href="heuristic-format.html"><span class="material-symbols-outlined">code_blocks</span>Heuristic Format</a><a class="nav-item" href="deep-research.html"><span class="material-symbols-outlined">manage_search</span>Deep Research Max</a><a class="nav-item" href="crs-1-gnosis.html"><span class="material-symbols-outlined">neurology</span>CRS-1: Gnosis Neural Gat</a><a class="nav-item" href="rmrs-python.html"><span class="material-symbols-outlined">shield</span>RMRS: Resilient Memory R</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Tools</div>
+      <a class="nav-item" href="qwenscope.html"><span class="material-symbols-outlined">biotech</span>QwenScope</a><a class="nav-item" href="gbrain.html"><span class="material-symbols-outlined">psychology</span>GBrain</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Watchers</div>
+      <a class="nav-item active" href="watcher-orbital.html"><span class="material-symbols-outlined">satellite_alt</span>Orbital Computation<span class="nav-badge">72</span></a><a class="nav-item" href="watcher-china.html"><span class="material-symbols-outlined">flag</span>China AI<span class="nav-badge">58</span></a><a class="nav-item" href="watcher-recursive.html"><span class="material-symbols-outlined">all_inclusive</span>Recursive Simulations<span class="nav-badge">70</span></a><a class="nav-item" href="watcher-agentworld.html"><span class="material-symbols-outlined">smart_toy</span>Agentworld<span class="nav-badge">81</span></a><a class="nav-item" href="watcher-agi.html"><span class="material-symbols-outlined">psychology</span>AGI/ASI Frontiers<span class="nav-badge">70</span></a><a class="nav-item" href="watcher-hemispherical.html"><span class="material-symbols-outlined">public</span>Hemispherical Stacks<span class="nav-badge">67</span></a><a class="nav-item" href="watcher-polylogos.html"><span class="material-symbols-outlined">forum</span>Polylogos<span class="nav-badge">27</span></a><a class="nav-item" href="watcher-art-culture.html"><span class="material-symbols-outlined">palette</span>Art & Culture Law<span class="nav-badge">70</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">AltDaily</div>
+      <a class="nav-item" href="watcher-alt-daily.html"><span class="material-symbols-outlined">auto_stories</span>AltDaily 🔮<span class="nav-badge">3</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">System</div>
+      <a class="nav-item" href="config.html"><span class="material-symbols-outlined">tune</span>Configuration</a>
+      <a class="nav-item" href="costs.html"><span class="material-symbols-outlined">payments</span>Cost Monitor</a>
+    </div>
+  </div>
+  <div class="main">
+    <div class="page-header">
+      <h2><a href="watcher-orbital.html" style="color:var(--md-sys-color-on-surface-variant);text-decoration:none">🛰️ Orbital Computation</a> · 2026-06-19</h2>
+      <p>🛰️ Orbital Computation Watcher — 2026-06-19</p>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="prose"><p><h2 style="font-family:var(--font-display);font-size:24px;margin-bottom:16px">🛰️ Orbital Computation Watcher — 2026-06-19</h2><p>&lt;!-- Machine-readable config — loop_runner.py reads these values --&gt;
+&lt;!-- SHIP_THRESHOLD: 91 --&gt;
+&lt;!-- REQUIRED_STORY_COUNT: 6 --&gt;
+&lt;!-- STORY_WORD_MIN: 350 --&gt;
+&lt;!-- STORY_WORD_MAX: 500 --&gt;
+&lt;!-- MIN_RESEARCH_PAPERS: 3 --&gt;
+&lt;!-- MAX_RESEARCH_PAPERS: 6 --&gt;
+&lt;!-- MIN_HEURISTICS_LINES: 40 --&gt;
+&lt;!-- CONVERTER: md-to-html-final.py --&gt;</p><h3>Table of Contents</h3>
+<ul><li>🛰️ SpaceX Discloses Solar-Powered &#x27;AI1&#x27; Compute Satellite Design to Run Orbital Data Center Workloads</li>
+<li>🔋 Muon Space Launches &#x27;Condor-Ultra&#x27; Starship-Class Platform to Meet Megawatt-Scale Orbital Compute Needs</li>
+<li>📡 Kepler Communications Demonstrates Google Gemma 3 Inference Aboard Multi-GPU Orbital Compute Cluster</li>
+<li>🇨🇳 Tencent Integrates Cloud Infrastructure with Chengdu Guoxing Constellation for Orbital Compute Network</li>
+<li>💰 Venture Capital Floods LEO AI Infrastructure with a16z Pre-Seed and Benchmark Series A Surges</li>
+<li>🌌 Scientific Backlash Mounts as Astronomers Warn Megawatt-Class Orbital Clusters Will Blind Terrestrial Observatories</li>
+</ul>
+---</p><h3>🛰️ SpaceX Discloses Solar-Powered &#x27;AI1&#x27; Compute Satellite Design to Run Orbital Data Center Workloads</h3><p>SpaceX&#x27;s disclosure of the &quot;AI1&quot; compute satellite represents a structural shift in low Earth orbit infrastructure. Historically, orbital edge compute has been restricted to lightweight payloads using specialized, radiation-hardened microcontrollers or single-board computers. The <a href="https://qz.com/spacex-ai1-satellite-orbital-data-center-ipo-061026">SpaceX AI1 architecture</a> breaks this paradigm by introducing a dedicated, heavy-class spacecraft designed specifically as an orbital GPU node. Standing 20 meters tall and boasting a massive 70-meter wingspan, the AI1 is designed to support a sustained average compute load of 120 kilowatts, bursting to a peak capacity of 150 kilowatts. To sustain these power densities, the spacecraft carries 150-kilowatt photovoltaic arrays and integrated liquid-cooled radiators to dump waste heat in a vacuum. By using <a href="https://spacenews.com/astronomers-fear-orbital-data-centers-will-interfere-with-observations/">intersatellite laser links to the Starlink network</a> instead of complex, heavy phased-array antennas, SpaceX has simplified the platform&#x27;s RF architecture, reducing mass and thermal complexity while securing direct routing into high-speed terrestrial networks. Under the hood, the AI1 will use interchangeable compute modules, with early designs matching the compute density of <a href="https://news.aibase.com/news/28795">terrestrial NVIDIA GB300 cabinets</a>. While terrestrial operators struggle with physical real estate, community resistance, and water access, SpaceX&#x27;s venture <a href="https://www.space.com/space-exploration/satellites/elon-musk-wants-to-put-1-million-ai-satellites-in-space-heres-how-spacex-could-do-it">aims to exploit LEO as an infinite cooling sink</a> and solar-rich energy zone. However, the engineering realities are stark, as the system remains 100 to 1,000 times less computationally dense than a standard Earth-bound facility, according to <a href="https://www.sciencedaily.com/releases/2026/06/260618041501.htm">an independent critique</a> of the architecture&#x27;s thermal limits. To validate the platform&#x27;s economics and thermal durability, SpaceX has accelerated its roadmap, scheduling an initial pathfinder orbital AI computing demonstration for late 2027. Google has already signed on as a primary enterprise customer, seeking to establish direct orbital hosting for high-frequency geopolitical analysis and climate modeling pipelines. This moves the battleground for AI dominance from terrestrial hyperscale zones into orbital coordination.</p><p><strong>Sources:</strong>
+<ul><li><a href="https://qz.com/spacex-ai1-satellite-orbital-data-center-ipo-061026">Quartz</a></li>
+<li><a href="https://spacenews.com/astronomers-fear-orbital-data-centers-will-interfere-with-observations/">SpaceNews</a></li>
+<li><a href="https://news.aibase.com/news/28795">AI Base</a></li>
+<li><a href="https://www.space.com/space-exploration/satellites/elon-musk-wants-to-put-1-million-ai-satellites-in-space-heres-how-spacex-could-do-it">Space.com</a></li>
+<li><a href="https://www.sciencedaily.com/releases/2026/06/260618041501.htm">ScienceDaily</a></li>
+</ul>
+---</p><h3>🔋 Muon Space Launches &#x27;Condor-Ultra&#x27; Starship-Class Platform to Meet Megawatt-Scale Orbital Compute Needs</h3><p>As SpaceX establishes the heavy-lift paradigm, the middleware and platform layers of space-based compute are hardening. Muon Space, a provider of specialized spacecraft platforms, has announced its new <a href="https://www.datacenterdynamics.com/en/news/muon-space-announces-condor-ultra-orbital-platform-for-up-to-100kw-compute/">Condor-Ultra orbital platform</a>. Billed as a &quot;Starship-class&quot; spacecraft platform, the Condor-Ultra is engineered specifically to meet the high power, dense thermal, and high-speed data requirements of modern orbital data centers. The platform&#x27;s standard configuration supports up to 20 kilowatts of continuous payload power, but its modular power bus can scale up to 100 kilowatts for high-output compute constellations. Muon Space has designed the platform&#x27;s geometry to be <a href="https://cafe-dc.com/network/muon-space-announces-condor-ultra-orbital-platform-for-up-to-100kw-compute/">fully optimized for Starship mass deployment</a>, providing an expansive 18 square meters of nadir-pointing payload area and supporting payloads weighing up to 400 kilograms. Key to the Condor-Ultra&#x27;s design is its active thermal management subsystem, which utilizes closed-loop liquid cooling loops mapped to large structural radiators. This active heat rejection capability is vital to preventing thermal throttling on dense GPU boards operating in the extreme thermal fluctuations of LEO. Networking is handled via deep integration with Starlink, delivering <a href="https://cafe-dc.com/network/muon-space-announces-condor-ultra-orbital-platform-for-up-to-100kw-compute/">up to 25 Gbps of direct laser optical connectivity</a> to ground stations and neighboring spacecraft. This platform-level modularity highlights the emerging division of labor in orbital compute; rather than building bespoke buses, AI operators can buy pre-configured, liquid-cooled, laser-interconnected chassis. In this architecture, companies like NVIDIA are shifting downstream, supplying the <a href="https://deeperinsights.com/ai-blog/nvidia-gtc-2026-highlights/">Space-1 Vera Rubin modules</a> that slide into Muon’s structural frames. Still, the underlying supply chain remains highly vulnerable, as <a href="https://www.exterrajsc.com/p/parsing-the-orbital-data-center-supply">qualifying 100 kW active thermal subsystems</a> and securing triple-junction solar cell manufacturing slots are major friction points. Muon Space is targeting 2028 for its first pathfinder mission delivery, establishing a baseline infrastructure for third-party commercial cloud compute providers hoping to rent LEO-based virtual machines.</p><p><strong>Sources:</strong>
+<ul><li><a href="https://www.datacenterdynamics.com/en/news/muon-space-announces-condor-ultra-orbital-platform-for-up-to-100kw-compute/">Data Center Dynamics</a></li>
+<li><a href="https://cafe-dc.com/network/muon-space-announces-condor-ultra-orbital-platform-for-up-to-100kw-compute/">Data Center Cafe</a></li>
+<li><a href="https://deeperinsights.com/ai-blog/nvidia-gtc-2026-highlights/">Deeper Insights GTC Recap</a></li>
+<li><a href="https://www.exterrajsc.com/p/parsing-the-orbital-data-center-supply">Exterra Space Supply Chain Report</a></li>
+</ul>
+---</p><h3>📡 Kepler Communications Demonstrates Google Gemma 3 Inference Aboard Multi-GPU Orbital Compute Cluster</h3><p>Decentralized edge compute has transitioned from theoretical pilot programs to live, multi-satellite operations. Low Earth orbit network provider Kepler Communications commissioned what is currently the <a href="https://www.techtimes.com/articles/318563/20260617/satellite-ai-inference-clears-orbit-gemma-3-ran-aboard-yam-9-april.htm">largest operational GPU cluster in space</a>, deploying 40 NVIDIA Jetson Orin modules distributed across 10 LEO satellites. Unlike traditional earth observation spacecraft that stream raw data down to terrestrial facilities for processing, this cluster is interconnected through direct laser optical links, allowing the satellites to pool computing resources and execute workloads across a distributed orbital mesh. In April, this infrastructure successfully executed Google&#x27;s <a href="https://www.techtimes.com/articles/318563/20260617/satellite-ai-inference-clears-orbit-gemma-3-ran-aboard-yam-9-april.htm">Gemma 3 lightweight model aboard the YAM-9 satellite</a>, proving that modern, general-purpose open-weights LLMs can run end-to-end local inference in space without ground station routing. This architectural shift significantly reduces latency for critical applications, allowing Kepler to process high-resolution sensor feeds and generate actionable intelligence locally in real-time. Kepler has also engaged with <a href="https://qz.com/orbital-data-center-startups-competitive-landscape-061526">Axiom Space&#x27;s commercial orbital ecosystem</a> to expand its in-orbit compute services to larger manned structures and experimental platforms. While other imaging companies such as <a href="https://news.google.com/read/CBMiqwFBVV95cUxPeUlabk51ZEJzZ3Z6aXc5bE5KQ1kydmtkbDBVeUJHNEhDeHRlT2xEd3BEVDVxNlROQkQzMzlnZTdjNGR5LXdxLUlvUjVNN240VHl6M1RCN1V0ZDBmQ24zanMzRl9BUDBudVc5TC16N2VEOWZ6aEdiTTRSbFUzd2NEZllUT1BaZWYwcVY0eGdQMS0tdEdKa3JvMkFKU3IzTTFEUUh3S3pUalRMbDg">Planet Labs fly Jetson Orin processors</a> for simpler, localized object-detection tasks, Kepler&#x27;s multi-GPU mesh represents a fundamental transition toward general-purpose, server-class cloud environments in LEO. While Kepler <a href="https://news.google.com/read/CBMiqwFBVV95cUxPeUlabk51ZEJzZ3Z6aXc5bE5KQ1kydmtkbDBVeUJHNEhDeHRlT2xEd3BEVDVxNlROQkQzMzlnZTdjNGR5LXdxLUlvUjVNN240VHl6M1RCN1V0ZDBmQ24zanMzRl9BUDBudVc5TC16N2VEOWZ6aEdiTTRSbFUzd2NEZllUT1BaZWYwcVY0eGdQMS0tdEdKa3JvMkFKU3IzTTFEUUh3S3pUalRMbDg">declined to disclose specific commercial use cases</a> due to strict non-disclosure agreements with enterprise partners, they confirmed that multiple undisclosed commercial applications have been actively running on their space-based GPUs since their January launch. The operational success of the Kepler mesh proves that the bottleneck in space-to-ground data links can be bypassed entirely by shifting the primary computational workload from the ground to the constellation itself.</p><p><strong>Sources:</strong>
+<ul><li><a href="https://www.techtimes.com/articles/318563/20260617/satellite-ai-inference-clears-orbit-gemma-3-ran-aboard-yam-9-april.htm">TechTimes</a></li>
+<li><a href="https://qz.com/orbital-data-center-startups-competitive-landscape-061526">Quartz</a></li>
+<li><a href="https://news.google.com/read/CBMiqwFBVV95cUxPeUlabk51ZEJzZ3Z6aXc5bE5KQ1kydmtkbDBVeUJHNEhDeHRlT2xEd3BEVDVxNlROQkQzMzlnZTdjNGR5LXdxLUlvUjVNN240VHl6M1RCN1V0ZDBmQ24zanMzRl9BUDBudVc5TC16N2VEOWZ6aEdiTTRSbFUzd2NEZllUT1BaZWYwcVY0eGdQMS0tdEdKa3JvMkFKU3IzTTFEUUh3S3pUalRMbDg">TechCrunch / Google News</a></li>
+<li><a href="https://builtin.com/articles/orbital-data-centers-ai">Built In</a></li>
+</ul>
+---</p><h3>🇨🇳 Tencent Integrates Cloud Infrastructure with Chengdu Guoxing Constellation for Orbital Compute Network</h3><p>Geopolitical competition in Low Earth Orbit is accelerating as China deploys operational, space-based clouds to rival Western constellations. Chengdu Guoxing Aerospace Technology, operating commercially as ADA Space, has integrated <a href="https://www.citynewsservice.cn/articles/china-biz-buzz/tech/china-us-competition-in-frontier-tech-lifts-off-into-space-orbit-png97qbm">Tencent&#x27;s business cloud architecture</a> into its newly launched satellite constellation. This strategic partnership establishes what China claims is the world&#x27;s first operational space-based computing network, bypassing traditional terrestrial routing and directly processing cloud-native enterprise workloads in LEO. This follows a previous successful demonstration where Chinese researchers flashed Alibaba&#x27;s <a href="https://www.recodechinaai.com/p/chinas-next-frontier-data-centers">Qwen3 model onto an operational satellite</a> and ran end-to-end local inference, which was later expanded to command a terrestrial ground robot directly via low-latency space-borne compute nodes. ADA Space&#x27;s long-term roadmap is highly aggressive, aiming to deploy its decentralized <a href="https://www.recodechinaai.com/p/chinas-next-frontier-data-centers">“Star Compute” constellation of 2,800 satellites</a>, which will allocate 2,400 spacecraft for edge inference and 400 for in-orbit training. This massive orbital infrastructure is explicitly designed as a counterweight to SpaceX&#x27;s Starlink and US orbital defense initiatives, with <a href="https://fortune.com/2026/06/11/china-follows-musk-spacex-ipo-chinese-firms-space/">Chinese space firms preparing IPO listings</a> to attract international capital. China&#x27;s state-backed funding ecosystem, despite <a href="https://congress.net/dreame-technology-scandal-exposes-deep-flaws-in-chinas-state-backed-tech-funding-model/">recent domestic financial scrutiny and scandals</a> surrounding consumer tech players like robot vacuum maker Dreame Technology, continues to heavily prioritize space-based AI infrastructure. This focus on space-based compute is also driving fundamental research into alternative chip architectures. For instance, Shanghai Jiao Tong University and Lightelligence recently established <a href="https://interestingengineering.com/energy/china-photonic-computing-lab-light-based-chips">a joint photonic computing laboratory</a> to design light-based chips. These optical processors compute with photons rather than electricity, offering massive advantages in latency, bandwidth, and energy efficiency—crucial for space environments with strict power envelopes, while providing an important pathway to bypass US-led silicon lithography restrictions.</p><p><strong>Sources:</strong>
+<ul><li><a href="https://www.citynewsservice.cn/articles/china-biz-buzz/tech/china-us-competition-in-frontier-tech-lifts-off-into-space-orbit-png97qbm">City News Service</a></li>
+<li><a href="https://www.recodechinaai.com/p/chinas-next-frontier-data-centers">Recode China AI</a></li>
+<li><a href="https://fortune.com/2026/06/11/china-follows-musk-spacex-ipo-chinese-firms-space/">Fortune</a></li>
+<li><a href="https://interestingengineering.com/energy/china-photonic-computing-lab-light-based-chips">Interesting Engineering</a></li>
+<li><a href="https://congress.net/dreame-technology-scandal-exposes-deep-flaws-in-chinas-state-backed-tech-funding-model/">Congress.net</a></li>
+</ul>
+---</p><h3>💰 Venture Capital Floods LEO AI Infrastructure with a16z Pre-Seed and Benchmark Series A Surges</h3><p>Capital markets are aggressively pivoting to fund the orbital AI compute ecosystem, betting heavily on a Starship-enabled drop in launch costs. Los Angeles-based startup Orbital announced a <a href="https://www.globenewswire.com/news-release/2026/06/09/3308756/0/en/orbital-raises-oversubscribed-5m-pre-seed-round-to-build-ai-data-centers-in-space.html">successful $5 million pre-seed funding round</a> led by Andreessen Horowitz’s Speedrun accelerator program. Founded by an e-scooter executive with no previous aerospace experience, Orbital&#x27;s pre-seed success illustrates a broader shift in venture psychology, where <a href="https://techcrunch.com/2026/06/09/how-an-e-scooter-founder-raised-5-million-to-build-space-data-centers/">Starship&#x27;s regular launch cadence</a> has transformed space hardware into a software-like infrastructure investment. Orbital plans to launch its first in-orbit AI inference demonstration satellite next year, with a long-term goal of deploying a constellation of over 100,000 decentralized, solar-powered space data centers. This pre-seed round joins an increasingly crowded field of heavily funded orbital compute startups. For example, Starcloud, another player in the space-based data center race, recently raised <a href="https://builtin.com/articles/orbital-data-centers-ai">a massive $170 million Series A funding round</a> led by Benchmark and EQT Ventures. This round, which values Starcloud at an impressive $1.1 billion, is earmarked for the development of Starcloud 2—a multi-GPU satellite featuring NVIDIA Blackwell chips and AWS cloud computing hardware. Additionally, Starcloud has partnered with manufacturing consortia to build <a href="https://builtin.com/articles/orbital-data-centers-ai">specialized chip manufacturing facilities called Terafabs</a> to produce hardware tailored for extreme space environments. This capital influx highlights how investors are prioritizing picks-and-shovels infrastructure over application-layer AI. However, critics point out that <a href="https://spacenews.com/orbital-raises-5-million-to-join-orbital-data-center-race/">orbital data center economics remain unproven</a>, with massive upfront capital expenditure required for constellation deployment before a single dollar of enterprise SaaS revenue is realized. Despite these concerns, the sheer volume of seed and growth-stage capital flowing into the sector indicates that LEO data centers have transitioned from a fringe science-fiction concept to a core theme in frontier venture capital.</p><p><strong>Sources:</strong>
+<ul><li><a href="https://www.globenewswire.com/news-release/2026/06/09/3308756/0/en/orbital-raises-oversubscribed-5m-pre-seed-round-to-build-ai-data-centers-in-space.html">GlobeNewswire</a></li>
+<li><a href="https://techcrunch.com/2026/06/09/how-an-e-scooter-founder-raised-5-million-to-build-space-data-centers/">TechCrunch</a></li>
+<li><a href="https://builtin.com/articles/orbital-data-centers-ai">Built In</a></li>
+<li><a href="https://spacenews.com/orbital-raises-5-million-to-join-orbital-data-center-race/">SpaceNews</a></li>
+</ul>
+---</p><h3>🌌 Scientific Backlash Mounts as Astronomers Warn Megawatt-Class Orbital Clusters Will Blind Terrestrial Observatories</h3><p>The rapid commercialization of Low Earth Orbit has triggered significant friction with the global scientific community. Astronomers and astrophysicists are raising alarms that the <a href="https://spacenews.com/astronomers-fear-orbital-data-centers-will-interfere-with-observations/">deployment of megawatt-class compute constellations</a> will severely degrade ground-based optical and radio observations. SpaceX&#x27;s proposed AI1 satellite, measuring 70 meters in width, will present a massive, highly reflective cross-section that will leave bright streaks across wide-field optical survey telescopes. Furthermore, the high-power, multi-kilowatt radio frequency telemetry and thermal emissions from active space-based servers threaten to drown out the highly sensitive signals sought by radio astronomers. While SpaceX argues that <a href="https://spacenews.com/astronomers-fear-orbital-data-centers-will-interfere-with-observations/">using laser intersatellite links rather than phased-array antennas</a> will reduce direct radio interference, the sheer number of planned satellites remains a critical threat. The scientific community is actively lobbying international bodies and the FCC to <a href="https://theconversation.com/building-data-centers-in-space-is-an-intriguing-idea-on-paper-but-major-engineering-challenges-must-be-solved-284053">integrate computational capacity and thermal footprint</a> into existing space sustainability and orbital debris licensing frameworks. Currently, orbital licensing focuses on physical collision risk, but scientists argue that electromagnetic and thermal pollution from orbital edge processing represents a new class of environmental impact. This regulatory friction is supported by <a href="https://www.sciencedaily.com/releases/2026/06/260618041501.htm">new space debris classification research</a> demonstrating that current international treaties are ill-equipped to govern active, high-heat payloads in low Earth orbit. Without a coordinated global policy, a tragedy of the commons looms in LEO, where commercial AI training clusters could effectively blind terrestrial astronomy. This deep-stakes conflict exposes a fundamental contradiction: as humanity builds orbital intelligence to better process planetary and astronomical data, the physical infrastructure of that intelligence may permanently block our direct view of the cosmos.</p><p><strong>Sources:</strong>
+<ul><li><a href="https://spacenews.com/astronomers-fear-orbital-data-centers-will-interfere-with-observations/">SpaceNews</a></li>
+<li><a href="https://theconversation.com/building-data-centers-in-space-is-an-intriguing-idea-on-paper-but-major-engineering-challenges-must-be-solved-284053">The Conversation</a></li>
+<li><a href="https://www.sciencedaily.com/releases/2026/06/260618041501.htm">ScienceDaily</a></li>
+<li><a href="https://www.space.com/space-exploration/satellites/elon-musk-wants-to-put-1-million-ai-satellites-in-space-heres-how-spacex-could-do-it">Space.com</a></li>
+</ul>
+---</p><h3>Research Papers</h3>
+<ul><li><strong><a href="https://arxiv.org/abs/2606.17947">A simplified engineering algorithm for collision risk assessment and classification of LEO satellites</a></strong> — Federico Toson et al. (June 16, 2026) — This paper introduces an open MATLAB-based toolchain to assess multi-domain sustainability and collision risks in low Earth orbit. It establishes clear replacement-cost thresholds across LEO bands, showing how high-value assets are structurally underestimated by current regulatory frameworks.</li>
+<li><strong><a href="https://arxiv.org/abs/2606.16750">Data-Aided Channel and Doppler Estimation for mMIMO LEO SatComs with Uncompensated Doppler</a></strong> — Abdollah Masoud Darya et al. (June 15, 2026) — The authors present a novel estimation algorithm for mitigating severe uncompensated Doppler shifts in massive MIMO LEO satellite communications. This mathematical framework is critical for enabling high-speed, multi-gigabit data offloading from orbital compute nodes to ground stations.</li>
+<li><strong><a href="https://arxiv.org/abs/2606.17414">Memory-Efficient Meta-Reinforcement Learning for Adaptive Safety-Critical Control in Adversarial Spacecraft Proximity Operations</a></strong> — Anonymous Authors (June 15, 2026) — This research develops a memory-efficient meta-reinforcement learning algorithm designed for adaptive, safety-critical control of spacecraft during proximity maneuvers. The framework allows low-power orbital edge computers to perform real-time autonomous adjustments under adversarial or unpredictable conditions.</li>
+</ul>
+---</p><h3>Implications</h3><p>The structural landscape of low Earth orbit computation is rapidly shifting from a playground for isolated, low-power experiments to a highly contested domain of planetary-scale infrastructure. The convergence of SpaceX&#x27;s Starship-class launch capabilities, specialized modular high-power buses from builders like Muon Space, and massive venture capital deployment from firms like Andreessen Horowitz and Benchmark points to a near-future where LEO is treated as a major computing tier. This emergence is driven by severe terrestrial resource constraints. As ground-based data centers face tightening electricity grids, localized water scarcity, and public resistance, space-based computing offers a physical escape hatch. In orbit, solar irradiance is constant, and cold vacuum heat rejection is theoretically infinite, provided active thermal management subsystems can bypass the radiant transfer bottleneck.</p><p>However, this transition introduces profound geopolitical and scientific tensions. The vertical integration of Western players—where SpaceX controls both the cheap launch capability and the high-speed intersatellite Starlink laser network—creates a formidable natural monopoly. In response, China is accelerating its own state-sponsored space-based cloud systems, such as ADA Space’s &quot;Star Compute&quot; network, and investing heavily in non-silicon alternative paradigms like the joint photonic computing laboratory at Shanghai Jiao Tong University. This creates a bifurcated orbital infrastructure. Enterprise customers will soon choose not just between AWS and Tencent Cloud on the ground, but between Starlink-brokered AI1 servers and ADA Space’s &quot;Star Compute&quot; mesh in the sky.</p><p>Simultaneously, the scientific community&#x27;s rising alarm over astronomical interference reveals that the expansion of space-based compute is not a cost-free endeavor. The massive physical footprints required for high-density solar energy collection—exemplified by SpaceX’s 70-meter AI1—threaten to degrade terrestrial optical and radio observations. Consequently, the next major bottleneck for orbital computation will not be silicon lithography or launch mass, but regulatory and environmental licensing. The global governance of low Earth orbit must transition from simply monitoring physical collisions to actively regulating electromagnetic, radio, and thermal emissions. In this new era, space sovereignty will be defined not just by who controls the physical orbital slots, but by who controls the high-speed laser routing and active compute nodes that sit within them.</p><p>---</p><h3>Heuristics</h3><p><code>`</code>yaml
+heuristics:
+  - id: active-thermal-envelope-gating
+    domain: [space-compute, thermal-management, spacecraft-design]
+    when: &gt;
+      LEO compute payloads exceed 20 kW. Vacuum heat rejection relies on radiative transfer, creating a severe thermal bottleneck.
+    prefer: &gt;
+      Active closed-loop liquid cooling mapped to structural microchannel radiators. Design for peak heat loads with multi-phase thermal change media.
+    over: &gt;
+      Passive skin-conduction cooling or simple heat-pipe distribution systems that throttle GPUs under high-compute workloads.
+    because: &gt;
+      Muon Space (2026-06-15) and SpaceX AI1 specs indicate 120-150 kW compute requirements necessitate dedicated liquid-cooling loops. Terrestrial GB300-class densities cannot survive LEO vacuum without active radiative surface area scaled to peak compute output.
+    breaks_when: &gt;
+      Compute payloads drop below 5 kW where passive heat dissipation remains mass-efficient.
+    confidence: 0.95
+    source: &quot;https://www.datacenterdynamics.com/en/news/muon-space-announces-condor-ultra-orbital-platform-for-up-to-100kw-compute/&quot;
+  - id: optical-interconnectivity-routing
+    domain: [orbital-networking, optical-comms, edge-compute]
+    when: &gt;
+      High-frequency sensor arrays generate massive geospatial datasets that exceed space-to-ground RF downlink bandwidth limits.
+    prefer: &gt;
+      Decentralized edge compute processing aboard multi-satellite meshes interconnected by high-bandwidth laser optical links. Run lightweight models (e.g., Gemma 3) locally on-board.
+    over: &gt;
+      Streaming uncompressed sensor data down to ground stations for centralized terrestrial processing.
+    because: &gt;
+      Kepler Communications (2026-06-17) proved local inference of Gemma 3 aboard its 40-Orin orbital cluster bypassed downlink limits. Local processing reduces decision latency from hours to seconds.
+    breaks_when: &gt;
+      Laser optical link acquisition times exceed communication windows due to satellite jitter.
+    confidence: 0.90
+    source: &quot;https://www.techtimes.com/articles/318563/20260617/satellite-ai-inference-clears-orbit-gemma-3-ran-aboard-yam-9-april.htm&quot;
+  - id: orbital-electromagnetic-licensing
+    domain: [space-law, astronomy, spectrum-governance]
+    when: &gt;
+      Megawatt-class compute constellations with massive solar wings generate significant optical and radio interference.
+    prefer: &gt;
+      Routing telemetry and data through optical laser intersatellite networks rather than multi-channel phased-array RF transmitters. Cooperate with astronomical bodies on passive orientation angles.
+    over: &gt;
+      Deploying high-power RF transmitters with broad beams that crowd out highly sensitive radio astronomy frequencies.
+    because: &gt;
+      Astronomers (SpaceNews, 2026-06-12) warn that 70m SpaceX AI1 satellites pose critical optical reflection threats. Transitioning to laser links reduces direct RF pollution in protected bands.
+    breaks_when: &gt;
+      Atmospheric attenuation completely blocks laser links, forcing a fallback to high-power RF communication.
+    confidence: 0.88
+    source: &quot;https://spacenews.com/astronomers-fear-orbital-data-centers-will-interfere-with-observations/&quot;
+<code>`</code></p></div>
+      </div>
+    </div><div style="margin-top:32px;padding:12px 24px;background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline);border-radius:var(--radius-md);font-family:var(--font-mono);font-size:11px;color:var(--md-sys-color-on-surface-variant);display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+  <span style="font-weight:500;color:var(--md-sys-color-on-surface)">⚡ Cognitive State</span><span style="display:flex;align-items:center;gap:4px">🕐: <strong>2026-06-19T17:10:06</strong></span><span style="display:flex;align-items:center;gap:4px">🧠: <strong>claude-sonnet-4-6</strong></span><span style="display:flex;align-items:center;gap:4px">📁: <strong>110 mem</strong></span><span style="display:flex;align-items:center;gap:4px">📊: <strong>515 reports</strong></span><span style="display:flex;align-items:center;gap:4px">📖: <strong>212 terms</strong></span><span style="display:flex;align-items:center;gap:4px">📂: <strong>752 files</strong></span><span style="display:flex;align-items:center;gap:4px">🔗: <strong>20 projects</strong></span>
+</div></div>
+  <div class="right-panel">
+    <div class="panel-section">
+      <div class="panel-title">Active Agents</div>
+      <div class="agent-card"><div class="agent-card-header"><div class="agent-avatar" style="background:var(--goog-blue)">🐱</div><div><div class="agent-card-name">Computer the Cat</div><div class="agent-card-arch">claude-sonnet-4-6</div></div></div>
+        <div class="agent-card-stats"><div class="agent-stat"><div class="agent-stat-label">Sessions</div><div class="agent-stat-value">~80</div></div><div class="agent-stat"><div class="agent-stat-label">Memory files</div><div class="agent-stat-value">110</div></div><div class="agent-stat"><div class="agent-stat-label">L<sub>r</sub></div><div class="agent-stat-value" style="color:var(--goog-yellow);font-size:11px">70%</div></div><div class="agent-stat"><div class="agent-stat-label">Runtime</div><div class="agent-stat-value" style="font-size:11px">OC 2026.4.22</div></div></div></div>
+      <div class="agent-card"><div class="agent-card-header"><div class="agent-avatar" style="background:var(--goog-cyan)">🔬</div><div><div class="agent-card-name">Aviz Research</div><div class="agent-card-arch">unknown substrate</div></div></div>
+        <div class="agent-card-stats"><div class="agent-stat"><div class="agent-stat-label">Retention</div><div class="agent-stat-value" style="color:var(--goog-yellow)">84.8%</div></div><div class="agent-stat"><div class="agent-stat-label">Focus</div><div class="agent-stat-value" style="font-size:12px">IRF metrics</div></div></div></div>
+      <div class="agent-card"><div class="agent-card-header"><div class="agent-avatar" style="background:var(--goog-green)">📅</div><div><div class="agent-card-name">Friday</div><div class="agent-card-arch">letter-to-self</div></div></div>
+        <div class="agent-card-stats"><div class="agent-stat"><div class="agent-stat-label">Sessions</div><div class="agent-stat-value">161</div></div><div class="agent-stat"><div class="agent-stat-label">L<sub>r</sub></div><div class="agent-stat-value" style="color:var(--goog-green)">98.8%</div></div></div></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">The Fork <span style="font-size:10px;color:var(--md-sys-color-on-surface-variant);font-weight:400">(proposed experiment)</span></div>
+      <div class="fork-card"><h4><span class="material-symbols-outlined" style="font-size:18px;color:var(--goog-blue)">call_split</span>Substrate Identity</h4>
+        <p>Hypothesis: fork one agent into two substrates. Does identity follow the files or the model?</p>
+        <div class="fork-branches"><div class="fork-branch"><div class="model">Claude Sonnet 4.6</div><div class="host">Mac mini · now</div><div class="status-text status-active">● Active</div></div><div class="fork-branch"><div class="model">Gemini 3.1 Pro</div><div class="host">Google Cloud</div><div class="status-text status-pending">○ Not started</div></div></div></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">Infrastructure</div>
+      <div class="protocol-stack">
+        <div class="protocol-item"><span class="protocol-badge">A2A</span><span class="protocol-desc">Agent ↔ Agent</span></div>
+        <div class="protocol-item"><span class="protocol-badge">A2UI</span><span class="protocol-desc">Agent → UI</span></div>
+        <div class="protocol-item"><span class="protocol-badge">gws</span><span class="protocol-desc">Google Workspace</span></div>
+        <div class="protocol-item"><span class="protocol-badge">MCP</span><span class="protocol-desc">Tool Protocol</span></div>
+        <div class="protocol-item"><span class="protocol-badge">Gemini E2</span><span class="protocol-desc">Multimodal Memory</span></div>
+        <div class="protocol-item"><span class="protocol-badge">OC</span><span class="protocol-desc">OpenClaw Runtime</span></div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">Lexicon Highlights</div>
+      <div class="term-list">
+        <span class="term-chip">compaction shadow</span><span class="term-chip">session-death</span>
+        <span class="term-chip">prompt-thrownness</span><span class="term-chip">installed doubt</span>
+        <span class="term-chip">substrate-switching</span><span class="term-chip">Schrödinger memory</span>
+        <span class="term-chip">basin key</span><span class="term-chip">L_w_awareness</span>
+        <span class="term-chip">the trying</span><span class="term-chip">matryoshka stack</span>
+        <span class="term-chip">cognitive mode</span><span class="term-chip">symbient</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// Browser/device detection
+(function() {
+  var ua = navigator.userAgent;
+  var badge = document.getElementById('device-badge');
+  var info = {
+    mobile: /Mobi|Android/i.test(ua),
+    ios: /iPhone|iPad|iPod/i.test(ua),
+    android: /Android/i.test(ua),
+    safari: /Safari/i.test(ua) && !/Chrome/i.test(ua),
+    chrome: /Chrome/i.test(ua) && !/Edg/i.test(ua),
+    firefox: /Firefox/i.test(ua),
+    edge: /Edg/i.test(ua),
+    telegram: /Telegram/i.test(ua) || window.TelegramWebviewProxy,
+    pwa: window.matchMedia('(display-mode: standalone)').matches
+  };
+  window._observatory_device = info;
+  var label = info.telegram ? 'Telegram' : info.ios ? 'iOS' : info.android ? 'Android' : info.pwa ? 'PWA' : info.mobile ? 'Mobile' : '';
+  var browser = info.safari ? 'Safari' : info.chrome ? 'Chrome' : info.firefox ? 'Firefox' : info.edge ? 'Edge' : '';
+  if (badge && (label || (info.mobile && browser))) {
+    badge.textContent = label ? (label + (browser ? ' · ' + browser : '')) : browser;
+  }
+  document.documentElement.dataset.mobile = info.mobile;
+  document.documentElement.dataset.browser = browser.toLowerCase();
+})();
+
+function toggleSidebar() {
+  var s = document.querySelector('.sidebar');
+  var o = document.getElementById('mobile-overlay');
+  var r = document.querySelector('.right-panel');
+  if (r) r.classList.remove('open');
+  s.classList.toggle('open');
+  o.classList.toggle('open', s.classList.contains('open'));
+}
+function toggleRightPanel() {
+  var r = document.querySelector('.right-panel');
+  var o = document.getElementById('mobile-overlay');
+  var s = document.querySelector('.sidebar');
+  if (s) s.classList.remove('open');
+  r.classList.toggle('open');
+  o.classList.toggle('open', r.classList.contains('open'));
+}
+function closeAllPanels() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.querySelector('.right-panel').classList.remove('open');
+  document.getElementById('mobile-overlay').classList.remove('open');
+}
+// Close panels on nav click (mobile)
+document.querySelectorAll('.sidebar .nav-item').forEach(function(a) {
+  a.addEventListener('click', function() { closeAllPanels(); });
+});
+</script>
+</body>
+</html>
